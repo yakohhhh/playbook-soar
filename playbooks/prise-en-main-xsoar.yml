@@ -1,0 +1,290 @@
+id: prise-en-main-xsoar
+version: -1
+name: Prise en main XSOAR - Triage
+description: |-
+  Playbook d'initiation basé uniquement sur des scripts natifs Cortex XSOAR (Set, Print) et une
+  tâche conditionnelle. Il enregistre la date de réception de l'incident, compare sa sévérité à un
+  seuil paramétrable, puis oriente vers une branche d'escalade ou de traitement standard.
+  Aucune intégration tierce n'est requise : il s'importe et s'exécute tel quel sur une instance vierge.
+starttaskid: "0"
+tasks:
+  "0":
+    id: "0"
+    taskid: e19ee039-136b-4fb2-adf0-2a4bb8e68fff
+    type: start
+    task:
+      id: e19ee039-136b-4fb2-adf0-2a4bb8e68fff
+      version: -1
+      name: ""
+      iscommand: false
+      brand: ""
+    nexttasks:
+      '#none#':
+        - "1"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 450, "y": 50}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "1":
+    id: "1"
+    taskid: 88a7c618-b179-4c0f-9597-8bcf3ecd3a26
+    type: title
+    task:
+      id: 88a7c618-b179-4c0f-9597-8bcf3ecd3a26
+      version: -1
+      name: Triage
+      type: title
+      iscommand: false
+      brand: ""
+    nexttasks:
+      '#none#':
+        - "2"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 450, "y": 190}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "2":
+    id: "2"
+    taskid: cc02995a-dafc-4ad3-aeb1-e115aaa47bba
+    type: regular
+    task:
+      id: cc02995a-dafc-4ad3-aeb1-e115aaa47bba
+      version: -1
+      name: Enregistrer la date de réception
+      description: Écrit la date de création de l'incident dans la clé de contexte Triage.RecuLe.
+      scriptName: Set
+      type: regular
+      iscommand: false
+      brand: ""
+    scriptarguments:
+      key:
+        simple: Triage.RecuLe
+      value:
+        simple: "${incident.created}"
+    nexttasks:
+      '#none#':
+        - "3"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 450, "y": 340}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "3":
+    id: "3"
+    taskid: f3a34c55-bdf2-4ab1-ad3d-af976ecaec10
+    type: condition
+    task:
+      id: f3a34c55-bdf2-4ab1-ad3d-af976ecaec10
+      version: -1
+      name: Sévérité au-dessus du seuil ?
+      description: Compare la sévérité de l'incident au seuil fourni en entrée du playbook.
+      type: condition
+      iscommand: false
+      brand: ""
+    nexttasks:
+      '#default#':
+        - "6"
+      "yes":
+        - "4"
+    conditions:
+      - label: "yes"
+        condition:
+          - - operator: greaterThanOrEqual
+              left:
+                value:
+                  simple: incident.severity
+                iscontext: true
+              right:
+                value:
+                  simple: inputs.SeuilSeverite
+                iscontext: true
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 450, "y": 490}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "4":
+    id: "4"
+    taskid: 0fd41898-d512-44ff-8aee-5b5704bfb51d
+    type: regular
+    task:
+      id: 0fd41898-d512-44ff-8aee-5b5704bfb51d
+      version: -1
+      name: Décision - escalade
+      description: Marque la décision de triage comme "Escalade" dans le contexte.
+      scriptName: Set
+      type: regular
+      iscommand: false
+      brand: ""
+    scriptarguments:
+      key:
+        simple: Triage.Decision
+      value:
+        simple: Escalade
+    nexttasks:
+      '#none#':
+        - "5"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 265, "y": 700}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "5":
+    id: "5"
+    taskid: 1f2c28d3-ffda-4432-b5ce-32baecc25b04
+    type: regular
+    task:
+      id: 1f2c28d3-ffda-4432-b5ce-32baecc25b04
+      version: -1
+      name: Journaliser l'escalade
+      description: Écrit un message d'escalade dans le War Room de l'incident.
+      scriptName: Print
+      type: regular
+      iscommand: false
+      brand: ""
+    scriptarguments:
+      value:
+        simple: "Incident ${incident.name} : sévérité au-dessus du seuil, escalade recommandée."
+    nexttasks:
+      '#none#':
+        - "8"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 265, "y": 870}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "6":
+    id: "6"
+    taskid: 9e409868-9304-4b28-9194-f0fe7077f716
+    type: regular
+    task:
+      id: 9e409868-9304-4b28-9194-f0fe7077f716
+      version: -1
+      name: Décision - traitement standard
+      description: Marque la décision de triage comme "Traitement standard" dans le contexte.
+      scriptName: Set
+      type: regular
+      iscommand: false
+      brand: ""
+    scriptarguments:
+      key:
+        simple: Triage.Decision
+      value:
+        simple: Traitement standard
+    nexttasks:
+      '#none#':
+        - "7"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 660, "y": 700}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "7":
+    id: "7"
+    taskid: 69c70d18-013c-4115-ac66-feac62bc284f
+    type: regular
+    task:
+      id: 69c70d18-013c-4115-ac66-feac62bc284f
+      version: -1
+      name: Journaliser le traitement standard
+      description: Écrit un message de traitement standard dans le War Room de l'incident.
+      scriptName: Print
+      type: regular
+      iscommand: false
+      brand: ""
+    scriptarguments:
+      value:
+        simple: "Incident ${incident.name} : sévérité sous le seuil, traitement standard."
+    nexttasks:
+      '#none#':
+        - "8"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 660, "y": 870}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "8":
+    id: "8"
+    taskid: 08c55d8c-8f96-439d-838d-9d0ee86d91b1
+    type: title
+    task:
+      id: 08c55d8c-8f96-439d-838d-9d0ee86d91b1
+      version: -1
+      name: Fin du triage
+      type: title
+      iscommand: false
+      brand: ""
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 450, "y": 1040}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+view: |-
+  {
+    "linkLabelsPosition": {},
+    "paper": {
+      "dimensions": {
+        "height": 1155,
+        "width": 775,
+        "x": 265,
+        "y": 50
+      }
+    }
+  }
+inputs:
+  - key: SeuilSeverite
+    value:
+      simple: "3"
+    required: false
+    description: |-
+      Seuil de sévérité déclenchant la branche d'escalade. Échelle XSOAR : 0 = Inconnue,
+      0.5 = Informative, 1 = Faible, 2 = Moyenne, 3 = Élevée, 4 = Critique. Valeur par défaut : 3.
+    playbookInputQuery: null
+outputs:
+  - contextPath: Triage.RecuLe
+    description: Date de création de l'incident, relevée au début du triage.
+    type: date
+  - contextPath: Triage.Decision
+    description: Décision de triage retenue - "Escalade" ou "Traitement standard".
+    type: string
+fromversion: 6.5.0
+tests:
+  - No tests (auto formatted)

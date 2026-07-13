@@ -1,0 +1,15 @@
+# Artefacts demisto-sdk
+.demisto-sdk-conf
+*.log
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Editeurs et OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
