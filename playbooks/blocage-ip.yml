@@ -1,0 +1,344 @@
+id: blocage-ip
+version: -1
+name: Blocage d'IP malveillante
+description: |-
+  Confine une IP en la bloquant, avec des garde-fous. Le playbook vérifie d'abord que l'IP n'est pas
+  dans une plage d'exclusion (adresses internes, partenaires) grâce au script IsIPInRanges, puis
+  demande une validation à l'analyste avant toute action. Le blocage lui-même est une tâche à exécuter
+  sur la solution réseau, remplaçable par la commande de l'intégration pare-feu en place. Rien n'est
+  bloqué sans passer par la validation.
+starttaskid: "0"
+tasks:
+  "0":
+    id: "0"
+    taskid: bd4d08d6-fa8b-45bc-84c1-1a3341c93e59
+    type: start
+    task:
+      id: bd4d08d6-fa8b-45bc-84c1-1a3341c93e59
+      version: -1
+      name: ""
+      description: ""
+      iscommand: false
+      brand: ""
+    nexttasks:
+      '#none#':
+        - "1"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 450, "y": 50}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "1":
+    id: "1"
+    taskid: fb1edb51-cf4c-475b-bd1a-4254957d781c
+    type: title
+    task:
+      id: fb1edb51-cf4c-475b-bd1a-4254957d781c
+      version: -1
+      name: Blocage d'IP malveillante
+      description: ""
+      type: title
+      iscommand: false
+      brand: ""
+    nexttasks:
+      '#none#':
+        - "2"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 450, "y": 190}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "2":
+    id: "2"
+    taskid: 892a7916-01bd-47b9-a3a7-401d8afbee26
+    type: regular
+    task:
+      id: 892a7916-01bd-47b9-a3a7-401d8afbee26
+      version: -1
+      name: L'IP est-elle dans une plage exclue ?
+      description: Vérifie si l'IP appartient à une plage d'exclusion via le script IsIPInRanges.
+      scriptName: IsIPInRanges
+      type: regular
+      iscommand: false
+      brand: ""
+    scriptarguments:
+      ip:
+        simple: "${inputs.IP}"
+      ipRanges:
+        simple: "${inputs.PlagesExclusion}"
+    nexttasks:
+      '#none#':
+        - "3"
+    separatecontext: false
+    continueonerror: true
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 450, "y": 330}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "3":
+    id: "3"
+    taskid: 4b3e9e7e-0472-44c4-a763-40311b7184fa
+    type: condition
+    task:
+      id: 4b3e9e7e-0472-44c4-a763-40311b7184fa
+      version: -1
+      name: IP exclue ?
+      description: Si l'IP est dans une plage d'exclusion, on refuse le blocage.
+      type: condition
+      iscommand: false
+      brand: ""
+    nexttasks:
+      '#default#':
+        - "5"
+      "yes":
+        - "4"
+    conditions:
+      - label: "yes"
+        condition:
+          - - operator: isEqualString
+              left:
+                value:
+                  simple: IP.InRange
+                iscontext: true
+              right:
+                value:
+                  simple: "yes"
+              ignorecase: true
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 450, "y": 470}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "4":
+    id: "4"
+    taskid: 906398be-b5cf-4711-a4f1-e82d9e373fa7
+    type: regular
+    task:
+      id: 906398be-b5cf-4711-a4f1-e82d9e373fa7
+      version: -1
+      name: Blocage refusé
+      description: L'IP est dans une plage exclue, aucun blocage n'est effectué.
+      scriptName: Set
+      type: regular
+      iscommand: false
+      brand: ""
+    scriptarguments:
+      key:
+        simple: Blocage.Statut
+      value:
+        simple: Refusé - IP dans une plage exclue
+    nexttasks:
+      '#none#':
+        - "9"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 220, "y": 640}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "5":
+    id: "5"
+    taskid: a4818f00-cc95-4ef8-b24f-8ce342008090
+    type: condition
+    task:
+      id: a4818f00-cc95-4ef8-b24f-8ce342008090
+      version: -1
+      name: Valider le blocage
+      description: |-
+        Demande à un analyste de valider le blocage avant toute action. La tâche se répond depuis le
+        plan de travail de l'incident, ou sur un canal si une méthode d'envoi est renseignée.
+      type: condition
+      iscommand: false
+      brand: ""
+    nexttasks:
+      '#default#':
+        - "7"
+      "Bloquer":
+        - "6"
+      "Annuler":
+        - "7"
+    separatecontext: false
+    view: |-
+      {"position": {"x": 640, "y": 640}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    message:
+      to:
+      subject:
+        simple: "Validation de blocage d'IP"
+      body:
+        simple: "Bloquer l'IP ${inputs.IP} ? Répondre \"Bloquer\" pour confirmer, \"Annuler\" sinon."
+      methods: []
+      format: ""
+      bcc:
+      cc:
+      timings:
+        retriescount: 1
+        retriesinterval: 20
+        completeafterreplies: 1
+      replyOptions:
+        - "Bloquer"
+        - "Annuler"
+    skipunavailable: false
+    quietmode: 0
+  "6":
+    id: "6"
+    taskid: 322d6c53-56e6-4957-b926-aa2bbec7d6a0
+    type: regular
+    task:
+      id: 322d6c53-56e6-4957-b926-aa2bbec7d6a0
+      version: -1
+      name: Pousser la règle de blocage
+      description: |-
+        Tâche à exécuter : appliquer le blocage de l'IP sur le pare-feu ou la solution réseau, puis
+        compléter la tâche. Remplaçable par la commande de blocage de l'intégration en place
+        (panorama-block-ip, checkpoint, etc.).
+      type: regular
+      iscommand: false
+      brand: ""
+    nexttasks:
+      '#none#':
+        - "8"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 640, "y": 810}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "7":
+    id: "7"
+    taskid: b583fe18-1610-422a-bc47-90f814224f56
+    type: regular
+    task:
+      id: b583fe18-1610-422a-bc47-90f814224f56
+      version: -1
+      name: Blocage annulé
+      description: L'analyste n'a pas validé le blocage.
+      scriptName: Set
+      type: regular
+      iscommand: false
+      brand: ""
+    scriptarguments:
+      key:
+        simple: Blocage.Statut
+      value:
+        simple: Annulé par l'analyste
+    nexttasks:
+      '#none#':
+        - "9"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 860, "y": 810}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "8":
+    id: "8"
+    taskid: 9f914f8f-47fc-4839-b5ee-0180791ea412
+    type: regular
+    task:
+      id: 9f914f8f-47fc-4839-b5ee-0180791ea412
+      version: -1
+      name: Blocage effectué
+      description: Journalise que l'IP a été bloquée.
+      scriptName: Set
+      type: regular
+      iscommand: false
+      brand: ""
+    scriptarguments:
+      key:
+        simple: Blocage.Statut
+      value:
+        simple: Bloqué
+    nexttasks:
+      '#none#':
+        - "9"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 640, "y": 970}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "9":
+    id: "9"
+    taskid: 2be2aee6-64e9-4f85-94c1-f88e0b2c85ee
+    type: title
+    task:
+      id: 2be2aee6-64e9-4f85-94c1-f88e0b2c85ee
+      version: -1
+      name: Fin
+      description: ""
+      type: title
+      iscommand: false
+      brand: ""
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 450, "y": 1140}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+view: |-
+  {
+    "linkLabelsPosition": {},
+    "paper": {
+      "dimensions": {
+        "height": 1155,
+        "width": 855,
+        "x": 220,
+        "y": 50
+      }
+    }
+  }
+inputs:
+  - key: IP
+    value: {}
+    required: false
+    description: Adresse IP à évaluer pour un blocage.
+    playbookInputQuery: null
+  - key: PlagesExclusion
+    value:
+      simple: 10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,127.0.0.0/8
+    required: false
+    description: |-
+      Plages CIDR qui ne doivent jamais être bloquées (adresses internes, partenaires). Par défaut, les
+      plages privées et la boucle locale.
+    playbookInputQuery: null
+outputs:
+  - contextPath: Blocage.Statut
+    description: Résultat - Bloqué, Annulé par l'analyste, ou Refusé (IP dans une plage exclue).
+    type: string
+fromversion: 6.5.0
+tests:
+  - No tests (auto formatted)
