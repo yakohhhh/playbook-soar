@@ -1,0 +1,331 @@
+id: deduplication-incidents
+version: -1
+name: Déduplication et corrélation d'incidents
+description: |-
+  À l'ouverture d'un incident, recherche les incidents similaires récents avec SearchIncidentsV2. S'il
+  en trouve, il lie l'incident courant à ces incidents puis clôture l'incident courant comme doublon.
+  C'est toujours l'incident courant qui est clôturé, jamais les incidents trouvés, ce qui évite de
+  fermer un parent par erreur. La requête de similarité est fournie en entrée, donc paramétrable.
+starttaskid: "0"
+tasks:
+  "0":
+    id: "0"
+    taskid: 43593178-69ae-4f12-99a2-4581fdcfd940
+    type: start
+    task:
+      id: 43593178-69ae-4f12-99a2-4581fdcfd940
+      version: -1
+      name: ""
+      description: ""
+      iscommand: false
+      brand: ""
+    nexttasks:
+      '#none#':
+        - "1"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 450, "y": 50}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "1":
+    id: "1"
+    taskid: be379140-b2d4-470c-a503-f49c0e4c52c7
+    type: title
+    task:
+      id: be379140-b2d4-470c-a503-f49c0e4c52c7
+      version: -1
+      name: Déduplication et corrélation
+      description: ""
+      type: title
+      iscommand: false
+      brand: ""
+    nexttasks:
+      '#none#':
+        - "2"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 450, "y": 190}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "2":
+    id: "2"
+    taskid: 65b6e65f-eed2-496b-bf1b-fba79329c794
+    type: regular
+    task:
+      id: 65b6e65f-eed2-496b-bf1b-fba79329c794
+      version: -1
+      name: Rechercher les incidents similaires
+      description: Cherche les incidents proches avec SearchIncidentsV2, en excluant l'incident courant.
+      scriptName: SearchIncidentsV2
+      type: regular
+      iscommand: false
+      brand: ""
+    scriptarguments:
+      query:
+        simple: "${inputs.RequeteSimilarite} -id:${incident.id}"
+      size:
+        simple: "${inputs.NombreMax}"
+    nexttasks:
+      '#none#':
+        - "3"
+    separatecontext: false
+    continueonerror: true
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 450, "y": 330}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "3":
+    id: "3"
+    taskid: d648360e-840f-431b-a78b-d9d8a1de290c
+    type: condition
+    task:
+      id: d648360e-840f-431b-a78b-d9d8a1de290c
+      version: -1
+      name: Doublon trouvé ?
+      description: Vrai si la recherche a renvoyé au moins un incident similaire.
+      type: condition
+      iscommand: false
+      brand: ""
+    nexttasks:
+      '#default#':
+        - "8"
+      "yes":
+        - "4"
+    conditions:
+      - label: "yes"
+        condition:
+          - - operator: isExists
+              left:
+                value:
+                  simple: foundIncidents.id
+                iscontext: true
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 450, "y": 470}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "4":
+    id: "4"
+    taskid: 13b16cd1-bd14-4ff9-96e4-8140625f8c8e
+    type: regular
+    task:
+      id: 13b16cd1-bd14-4ff9-96e4-8140625f8c8e
+      version: -1
+      name: Retenir les incidents liés
+      description: Enregistre les identifiants des incidents similaires trouvés.
+      scriptName: Set
+      type: regular
+      iscommand: false
+      brand: ""
+    scriptarguments:
+      key:
+        simple: Dedup.IncidentsLies
+      value:
+        simple: "${foundIncidents.id}"
+    nexttasks:
+      '#none#':
+        - "5"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 250, "y": 640}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "5":
+    id: "5"
+    taskid: c26b5639-227c-4e5f-81e1-8544f89407e5
+    type: regular
+    task:
+      id: c26b5639-227c-4e5f-81e1-8544f89407e5
+      version: -1
+      name: Lier au(x) incident(s) parent(s)
+      description: Lie l'incident courant aux incidents similaires trouvés.
+      script: Builtin|||linkIncidents
+      type: regular
+      iscommand: true
+      brand: Builtin
+    scriptarguments:
+      linkedIncidentIDs:
+        simple: "${foundIncidents.id}"
+    nexttasks:
+      '#none#':
+        - "6"
+    separatecontext: false
+    continueonerror: true
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 250, "y": 780}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "6":
+    id: "6"
+    taskid: 4e87b258-d875-470c-a50f-3dc42825fe4a
+    type: regular
+    task:
+      id: 4e87b258-d875-470c-a50f-3dc42825fe4a
+      version: -1
+      name: Marquer le doublon
+      description: Enregistre que l'incident courant est un doublon.
+      scriptName: Set
+      type: regular
+      iscommand: false
+      brand: ""
+    scriptarguments:
+      key:
+        simple: Dedup.Statut
+      value:
+        simple: Doublon - lié et clôturé
+    nexttasks:
+      '#none#':
+        - "7"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 250, "y": 920}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "7":
+    id: "7"
+    taskid: 07d71601-529b-4157-a7ba-34da0d0fabfe
+    type: regular
+    task:
+      id: 07d71601-529b-4157-a7ba-34da0d0fabfe
+      version: -1
+      name: Clôturer le doublon
+      description: |-
+        Clôture l'incident courant comme doublon. Aucun argument d'identifiant n'est passé, donc c'est
+        bien l'incident courant qui est fermé, pas les incidents parents.
+      script: Builtin|||closeInvestigation
+      type: regular
+      iscommand: true
+      brand: Builtin
+    scriptarguments:
+      closeReason:
+        simple: Duplicate
+      closeNotes:
+        simple: "Doublon des incidents ${foundIncidents.id}. Clôturé automatiquement par le playbook de déduplication."
+    nexttasks:
+      '#none#':
+        - "9"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 250, "y": 1060}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "8":
+    id: "8"
+    taskid: 89e2a83a-ad65-45dd-bd3e-ac567266e7b4
+    type: regular
+    task:
+      id: 89e2a83a-ad65-45dd-bd3e-ac567266e7b4
+      version: -1
+      name: Pas de doublon
+      description: Aucun incident similaire, l'incident suit son cours normal.
+      scriptName: Set
+      type: regular
+      iscommand: false
+      brand: ""
+    scriptarguments:
+      key:
+        simple: Dedup.Statut
+      value:
+        simple: Pas de doublon - traitement normal
+    nexttasks:
+      '#none#':
+        - "9"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 660, "y": 640}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "9":
+    id: "9"
+    taskid: b2aeb808-1642-4c85-b209-4822b86c6f05
+    type: title
+    task:
+      id: b2aeb808-1642-4c85-b209-4822b86c6f05
+      version: -1
+      name: Fin
+      description: ""
+      type: title
+      iscommand: false
+      brand: ""
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 450, "y": 1230}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+view: |-
+  {
+    "linkLabelsPosition": {},
+    "paper": {
+      "dimensions": {
+        "height": 1245,
+        "width": 855,
+        "x": 250,
+        "y": 50
+      }
+    }
+  }
+inputs:
+  - key: RequeteSimilarite
+    value:
+      simple: "status:active and type:${incident.type}"
+    required: false
+    description: |-
+      Requête qui définit ce qu'est un incident similaire (syntaxe de recherche XSOAR). Par défaut, les
+      incidents actifs du même type. L'incident courant est automatiquement exclu de la recherche.
+    playbookInputQuery: null
+  - key: NombreMax
+    value:
+      simple: "10"
+    required: false
+    description: Nombre maximum d'incidents similaires à récupérer.
+    playbookInputQuery: null
+outputs:
+  - contextPath: Dedup.Statut
+    description: Résultat - doublon lié et clôturé, ou pas de doublon.
+    type: string
+  - contextPath: Dedup.IncidentsLies
+    description: Identifiants des incidents similaires auxquels l'incident courant a été lié.
+    type: unknown
+fromversion: 6.5.0
+tests:
+  - No tests (auto formatted)
