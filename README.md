@@ -14,6 +14,7 @@ sur une instance vierge sans installer d'intégration.
 | Notification et escalade | [playbooks/notification-et-escalade.yml](playbooks/notification-et-escalade.yml) | [docs/notification-et-escalade.md](docs/notification-et-escalade.md) |
 | Clôture automatique des faux positifs connus | [playbooks/cloture-faux-positifs.yml](playbooks/cloture-faux-positifs.yml) | [docs/cloture-faux-positifs.md](docs/cloture-faux-positifs.md) |
 | Enrichissement d'indicateurs (générique) | [playbooks/enrichissement-indicateurs.yml](playbooks/enrichissement-indicateurs.yml) | [docs/enrichissement-indicateurs.md](docs/enrichissement-indicateurs.md) |
+| Enrichissement de vulnérabilité (CVE) | [playbooks/enrichissement-cve.yml](playbooks/enrichissement-cve.yml) | [docs/enrichissement-cve.md](docs/enrichissement-cve.md) |
 
 ## Organisation
 
