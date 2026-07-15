@@ -19,6 +19,7 @@ sur une instance vierge sans installer d'intégration.
 | Blocage d'IP malveillante | [playbooks/blocage-ip.yml](playbooks/blocage-ip.yml) | [docs/blocage-ip.md](docs/blocage-ip.md) |
 | Déduplication et corrélation d'incidents | [playbooks/deduplication-incidents.yml](playbooks/deduplication-incidents.yml) | [docs/deduplication-incidents.md](docs/deduplication-incidents.md) |
 | Enrichissement de compte utilisateur | [playbooks/enrichissement-compte.yml](playbooks/enrichissement-compte.yml) | [docs/enrichissement-compte.md](docs/enrichissement-compte.md) |
+| Réponse malware sur endpoint | [playbooks/reponse-malware-endpoint.yml](playbooks/reponse-malware-endpoint.yml) | [docs/reponse-malware-endpoint.md](docs/reponse-malware-endpoint.md) |
 
 ## Organisation
 
