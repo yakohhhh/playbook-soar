@@ -1,0 +1,506 @@
+id: enrichissement-cve
+version: -1
+name: Enrichissement de vulnérabilité (CVE)
+description: |-
+  À partir d'un identifiant CVE, récupère les détails via la commande générique !cve, puis propose une
+  priorité de traitement à partir du score CVSS. Un exploit public connu (fourni en entrée, par exemple
+  depuis la CISA KEV) force la priorité au niveau critique. Si la CVE est introuvable ou mal formée, le
+  playbook se termine proprement avec une priorité "CVE introuvable" au lieu de planter.
+starttaskid: "0"
+tasks:
+  "0":
+    id: "0"
+    taskid: 71e4e778-1edc-4629-a491-6c2d485d4fc1
+    type: start
+    task:
+      id: 71e4e778-1edc-4629-a491-6c2d485d4fc1
+      version: -1
+      name: ""
+      description: ""
+      iscommand: false
+      brand: ""
+    nexttasks:
+      '#none#':
+        - "1"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 450, "y": 50}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "1":
+    id: "1"
+    taskid: 92b45125-0398-4518-b685-d6312ee8fae2
+    type: title
+    task:
+      id: 92b45125-0398-4518-b685-d6312ee8fae2
+      version: -1
+      name: Enrichissement CVE
+      description: ""
+      type: title
+      iscommand: false
+      brand: ""
+    nexttasks:
+      '#none#':
+        - "2"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 450, "y": 190}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "2":
+    id: "2"
+    taskid: 50b6fd19-cf83-4448-b67e-6bdcf51c4408
+    type: regular
+    task:
+      id: 50b6fd19-cf83-4448-b67e-6bdcf51c4408
+      version: -1
+      name: Rechercher la CVE
+      description: Récupère les détails de la CVE via la commande générique !cve.
+      script: '|||cve'
+      type: regular
+      iscommand: true
+      brand: ""
+    scriptarguments:
+      cve_id:
+        simple: "${inputs.cve_id}"
+    nexttasks:
+      '#none#':
+        - "3"
+    separatecontext: false
+    continueonerror: true
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 450, "y": 330}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: true
+    quietmode: 0
+  "3":
+    id: "3"
+    taskid: ba868cf3-0229-4c79-bdce-1fddb6a6775f
+    type: condition
+    task:
+      id: ba868cf3-0229-4c79-bdce-1fddb6a6775f
+      version: -1
+      name: CVE trouvée ?
+      description: Vérifie qu'un résultat a été renvoyé pour la CVE demandée.
+      type: condition
+      iscommand: false
+      brand: ""
+    nexttasks:
+      '#default#':
+        - "13"
+      "yes":
+        - "4"
+    conditions:
+      - label: "yes"
+        condition:
+          - - operator: isExists
+              left:
+                value:
+                  simple: CVE.ID
+                iscontext: true
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 450, "y": 470}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "4":
+    id: "4"
+    taskid: dbe014ee-f0ce-4a93-ac69-963acd75330d
+    type: condition
+    task:
+      id: dbe014ee-f0ce-4a93-ac69-963acd75330d
+      version: -1
+      name: Exploit public connu ?
+      description: Un exploit public connu force la priorité critique, quel que soit le score CVSS.
+      type: condition
+      iscommand: false
+      brand: ""
+    nexttasks:
+      '#default#':
+        - "6"
+      "yes":
+        - "5"
+    conditions:
+      - label: "yes"
+        condition:
+          - - operator: isEqualString
+              left:
+                value:
+                  simple: inputs.ExploitConnu
+                iscontext: true
+              right:
+                value:
+                  simple: "true"
+              ignorecase: true
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 450, "y": 610}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "5":
+    id: "5"
+    taskid: 6163971b-f6b1-4d28-82df-c116be4373bd
+    type: regular
+    task:
+      id: 6163971b-f6b1-4d28-82df-c116be4373bd
+      version: -1
+      name: Priorité critique (exploit)
+      description: Exploit public connu, priorité critique.
+      scriptName: Set
+      type: regular
+      iscommand: false
+      brand: ""
+    scriptarguments:
+      key:
+        simple: CVE_Triage.Priorite
+      value:
+        simple: Critique (exploit public connu)
+    nexttasks:
+      '#none#':
+        - "14"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 200, "y": 780}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "6":
+    id: "6"
+    taskid: 24e4ba9a-06ab-4624-9d0f-b5458d993c03
+    type: condition
+    task:
+      id: 24e4ba9a-06ab-4624-9d0f-b5458d993c03
+      version: -1
+      name: CVSS élevé (>= 9) ?
+      description: Score CVSS de 9 ou plus, vulnérabilité critique.
+      type: condition
+      iscommand: false
+      brand: ""
+    nexttasks:
+      '#default#':
+        - "8"
+      "yes":
+        - "7"
+    conditions:
+      - label: "yes"
+        condition:
+          - - operator: greaterThanOrEqual
+              left:
+                value:
+                  simple: CVE.CVSS
+                iscontext: true
+              right:
+                value:
+                  simple: "9"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 640, "y": 780}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "7":
+    id: "7"
+    taskid: 2fce1c45-a1bf-456c-b785-6276dfe9eea0
+    type: regular
+    task:
+      id: 2fce1c45-a1bf-456c-b785-6276dfe9eea0
+      version: -1
+      name: Priorité critique
+      description: CVSS de 9 ou plus, priorité critique.
+      scriptName: Set
+      type: regular
+      iscommand: false
+      brand: ""
+    scriptarguments:
+      key:
+        simple: CVE_Triage.Priorite
+      value:
+        simple: Critique
+    nexttasks:
+      '#none#':
+        - "14"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 460, "y": 950}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "8":
+    id: "8"
+    taskid: 8f9c7514-a67b-427a-ad8a-cddd3eac3610
+    type: condition
+    task:
+      id: 8f9c7514-a67b-427a-ad8a-cddd3eac3610
+      version: -1
+      name: CVSS haut (>= 7) ?
+      description: Score CVSS entre 7 et 9, vulnérabilité de sévérité élevée.
+      type: condition
+      iscommand: false
+      brand: ""
+    nexttasks:
+      '#default#':
+        - "10"
+      "yes":
+        - "9"
+    conditions:
+      - label: "yes"
+        condition:
+          - - operator: greaterThanOrEqual
+              left:
+                value:
+                  simple: CVE.CVSS
+                iscontext: true
+              right:
+                value:
+                  simple: "7"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 640, "y": 950}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "9":
+    id: "9"
+    taskid: 5e277b88-439d-4d23-b779-459e44276dcb
+    type: regular
+    task:
+      id: 5e277b88-439d-4d23-b779-459e44276dcb
+      version: -1
+      name: Priorité élevée
+      description: CVSS entre 7 et 9, priorité élevée.
+      scriptName: Set
+      type: regular
+      iscommand: false
+      brand: ""
+    scriptarguments:
+      key:
+        simple: CVE_Triage.Priorite
+      value:
+        simple: Élevée
+    nexttasks:
+      '#none#':
+        - "14"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 470, "y": 1120}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "10":
+    id: "10"
+    taskid: 4d573be1-0475-41ce-b9c6-b7a7a52ec432
+    type: condition
+    task:
+      id: 4d573be1-0475-41ce-b9c6-b7a7a52ec432
+      version: -1
+      name: CVSS moyen (>= 4) ?
+      description: Score CVSS entre 4 et 7, sévérité moyenne, sinon faible.
+      type: condition
+      iscommand: false
+      brand: ""
+    nexttasks:
+      '#default#':
+        - "12"
+      "yes":
+        - "11"
+    conditions:
+      - label: "yes"
+        condition:
+          - - operator: greaterThanOrEqual
+              left:
+                value:
+                  simple: CVE.CVSS
+                iscontext: true
+              right:
+                value:
+                  simple: "4"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 640, "y": 1120}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "11":
+    id: "11"
+    taskid: dfb7720d-a356-4533-a5ba-cf90a96a07a2
+    type: regular
+    task:
+      id: dfb7720d-a356-4533-a5ba-cf90a96a07a2
+      version: -1
+      name: Priorité moyenne
+      description: CVSS entre 4 et 7, priorité moyenne.
+      scriptName: Set
+      type: regular
+      iscommand: false
+      brand: ""
+    scriptarguments:
+      key:
+        simple: CVE_Triage.Priorite
+      value:
+        simple: Moyenne
+    nexttasks:
+      '#none#':
+        - "14"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 470, "y": 1290}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "12":
+    id: "12"
+    taskid: 40c1ce8f-fa51-44c7-8b77-00cff57acd1e
+    type: regular
+    task:
+      id: 40c1ce8f-fa51-44c7-8b77-00cff57acd1e
+      version: -1
+      name: Priorité faible
+      description: CVSS inférieur à 4, priorité faible.
+      scriptName: Set
+      type: regular
+      iscommand: false
+      brand: ""
+    scriptarguments:
+      key:
+        simple: CVE_Triage.Priorite
+      value:
+        simple: Faible
+    nexttasks:
+      '#none#':
+        - "14"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 810, "y": 1290}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "13":
+    id: "13"
+    taskid: 242dfc04-2f26-487d-a27f-190822df1067
+    type: regular
+    task:
+      id: 242dfc04-2f26-487d-a27f-190822df1067
+      version: -1
+      name: CVE introuvable
+      description: Aucun résultat pour la CVE, on n'attribue pas de priorité.
+      scriptName: Set
+      type: regular
+      iscommand: false
+      brand: ""
+    scriptarguments:
+      key:
+        simple: CVE_Triage.Priorite
+      value:
+        simple: CVE introuvable
+    nexttasks:
+      '#none#':
+        - "14"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 200, "y": 610}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "14":
+    id: "14"
+    taskid: 8c8fb36d-7305-4492-a852-3a1bf2a0270d
+    type: title
+    task:
+      id: 8c8fb36d-7305-4492-a852-3a1bf2a0270d
+      version: -1
+      name: Fin
+      description: ""
+      type: title
+      iscommand: false
+      brand: ""
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 450, "y": 1470}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+view: |-
+  {
+    "linkLabelsPosition": {},
+    "paper": {
+      "dimensions": {
+        "height": 1485,
+        "width": 1075,
+        "x": 200,
+        "y": 50
+      }
+    }
+  }
+inputs:
+  - key: cve_id
+    value: {}
+    required: false
+    description: Identifiant de la CVE à enrichir (par exemple CVE-2021-44228).
+    playbookInputQuery: null
+  - key: ExploitConnu
+    value:
+      simple: "false"
+    required: false
+    description: |-
+      Mettre "true" si un exploit public est connu pour cette CVE (par exemple si elle figure dans la
+      CISA KEV). Force la priorité au niveau critique.
+    playbookInputQuery: null
+outputs:
+  - contextPath: CVE_Triage.Priorite
+    description: Priorité proposée - Critique, Élevée, Moyenne, Faible ou "CVE introuvable".
+    type: string
+  - contextPath: CVE
+    description: Détails de la CVE renvoyés par l'intégration (CVSS, description, dates).
+    type: unknown
+fromversion: 6.5.0
+tests:
+  - No tests (auto formatted)
