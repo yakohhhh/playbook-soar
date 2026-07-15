@@ -1,0 +1,402 @@
+id: enrichissement-indicateurs
+version: -1
+name: Enrichissement d'indicateurs (générique)
+description: |-
+  Prend une ou plusieurs valeurs d'indicateurs (IP, domaine, URL, hash) et récupère leur réputation
+  via les commandes génériques !ip, !domain, !url et !file. Aucun fournisseur n'est codé en dur : la
+  commande part vers l'intégration de réputation installée sur l'instance, et chaque appel est ignoré
+  s'il n'y a pas d'intégration ou si le type d'indicateur est absent. Un verdict consolidé est calculé
+  à partir du DBotScore le plus élevé. Ce playbook sert de brique de base à d'autres playbooks.
+starttaskid: "0"
+tasks:
+  "0":
+    id: "0"
+    taskid: 90e90930-9860-4a3c-b67a-fa2cd5d9f38e
+    type: start
+    task:
+      id: 90e90930-9860-4a3c-b67a-fa2cd5d9f38e
+      version: -1
+      name: ""
+      description: ""
+      iscommand: false
+      brand: ""
+    nexttasks:
+      '#none#':
+        - "1"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 450, "y": 50}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "1":
+    id: "1"
+    taskid: f2d25b17-0efb-4929-bafa-657a3c7d4c33
+    type: title
+    task:
+      id: f2d25b17-0efb-4929-bafa-657a3c7d4c33
+      version: -1
+      name: Enrichissement d'indicateurs
+      description: ""
+      type: title
+      iscommand: false
+      brand: ""
+    nexttasks:
+      '#none#':
+        - "2"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 450, "y": 190}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "2":
+    id: "2"
+    taskid: f1df6812-94b8-43e6-a2ed-37c9697e3c9b
+    type: regular
+    task:
+      id: f1df6812-94b8-43e6-a2ed-37c9697e3c9b
+      version: -1
+      name: Réputation IP
+      description: Interroge la réputation des adresses IP fournies via la commande générique !ip.
+      script: '|||ip'
+      type: regular
+      iscommand: true
+      brand: ""
+    scriptarguments:
+      ip:
+        simple: "${inputs.IP}"
+    nexttasks:
+      '#none#':
+        - "3"
+    separatecontext: false
+    continueonerror: true
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 450, "y": 330}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: true
+    quietmode: 0
+  "3":
+    id: "3"
+    taskid: 6f151a07-acbb-497e-bac1-2f29b770175c
+    type: regular
+    task:
+      id: 6f151a07-acbb-497e-bac1-2f29b770175c
+      version: -1
+      name: Réputation domaine
+      description: Interroge la réputation des domaines fournis via la commande générique !domain.
+      script: '|||domain'
+      type: regular
+      iscommand: true
+      brand: ""
+    scriptarguments:
+      domain:
+        simple: "${inputs.Domain}"
+    nexttasks:
+      '#none#':
+        - "4"
+    separatecontext: false
+    continueonerror: true
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 450, "y": 470}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: true
+    quietmode: 0
+  "4":
+    id: "4"
+    taskid: 90a68ff0-e217-4868-aa22-d21d4bf983cc
+    type: regular
+    task:
+      id: 90a68ff0-e217-4868-aa22-d21d4bf983cc
+      version: -1
+      name: Réputation URL
+      description: Interroge la réputation des URLs fournies via la commande générique !url.
+      script: '|||url'
+      type: regular
+      iscommand: true
+      brand: ""
+    scriptarguments:
+      url:
+        simple: "${inputs.URL}"
+    nexttasks:
+      '#none#':
+        - "5"
+    separatecontext: false
+    continueonerror: true
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 450, "y": 610}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: true
+    quietmode: 0
+  "5":
+    id: "5"
+    taskid: 5371a2c9-ce98-4ffe-b126-2c5dcca881d7
+    type: regular
+    task:
+      id: 5371a2c9-ce98-4ffe-b126-2c5dcca881d7
+      version: -1
+      name: Réputation fichier
+      description: Interroge la réputation des hash de fichiers fournis via la commande générique !file.
+      script: '|||file'
+      type: regular
+      iscommand: true
+      brand: ""
+    scriptarguments:
+      file:
+        simple: "${inputs.FileHash}"
+    nexttasks:
+      '#none#':
+        - "6"
+    separatecontext: false
+    continueonerror: true
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 450, "y": 750}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: true
+    quietmode: 0
+  "6":
+    id: "6"
+    taskid: a6d76c91-dd26-41a5-879e-435abf0451ee
+    type: condition
+    task:
+      id: a6d76c91-dd26-41a5-879e-435abf0451ee
+      version: -1
+      name: Un indicateur malveillant ?
+      description: Vrai si au moins un indicateur a reçu un DBotScore de 3 (malveillant).
+      type: condition
+      iscommand: false
+      brand: ""
+    nexttasks:
+      '#default#':
+        - "8"
+      "yes":
+        - "7"
+    conditions:
+      - label: "yes"
+        condition:
+          - - operator: greaterThanOrEqual
+              left:
+                value:
+                  simple: DBotScore.Score
+                iscontext: true
+              right:
+                value:
+                  simple: "3"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 450, "y": 890}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "7":
+    id: "7"
+    taskid: 7613bafc-1c1f-4452-bbe4-f48c7a6afb0c
+    type: regular
+    task:
+      id: 7613bafc-1c1f-4452-bbe4-f48c7a6afb0c
+      version: -1
+      name: Verdict malveillant
+      description: Consigne un verdict malveillant dans le contexte.
+      scriptName: Set
+      type: regular
+      iscommand: false
+      brand: ""
+    scriptarguments:
+      key:
+        simple: Enrichissement.Verdict
+      value:
+        simple: Malveillant
+    nexttasks:
+      '#none#':
+        - "11"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 250, "y": 1060}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "8":
+    id: "8"
+    taskid: 1e20b0ef-ffaa-4bb0-a1e4-ee10ad444708
+    type: condition
+    task:
+      id: 1e20b0ef-ffaa-4bb0-a1e4-ee10ad444708
+      version: -1
+      name: Un indicateur suspect ?
+      description: Vrai si au moins un indicateur a reçu un DBotScore de 2 (suspect).
+      type: condition
+      iscommand: false
+      brand: ""
+    nexttasks:
+      '#default#':
+        - "10"
+      "yes":
+        - "9"
+    conditions:
+      - label: "yes"
+        condition:
+          - - operator: greaterThanOrEqual
+              left:
+                value:
+                  simple: DBotScore.Score
+                iscontext: true
+              right:
+                value:
+                  simple: "2"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 640, "y": 1060}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "9":
+    id: "9"
+    taskid: dd45a357-2ba2-4e7b-ac48-0026f49f3673
+    type: regular
+    task:
+      id: dd45a357-2ba2-4e7b-ac48-0026f49f3673
+      version: -1
+      name: Verdict suspect
+      description: Consigne un verdict suspect dans le contexte.
+      scriptName: Set
+      type: regular
+      iscommand: false
+      brand: ""
+    scriptarguments:
+      key:
+        simple: Enrichissement.Verdict
+      value:
+        simple: Suspect
+    nexttasks:
+      '#none#':
+        - "11"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 500, "y": 1230}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "10":
+    id: "10"
+    taskid: 750b960a-3da0-4d90-94fd-f521f23b2d90
+    type: regular
+    task:
+      id: 750b960a-3da0-4d90-94fd-f521f23b2d90
+      version: -1
+      name: Verdict non concluant
+      description: Aucun indicateur suspect ou malveillant, verdict non concluant.
+      scriptName: Set
+      type: regular
+      iscommand: false
+      brand: ""
+    scriptarguments:
+      key:
+        simple: Enrichissement.Verdict
+      value:
+        simple: Non concluant
+    nexttasks:
+      '#none#':
+        - "11"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 780, "y": 1230}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "11":
+    id: "11"
+    taskid: 39e9aaf2-6799-4be9-b93a-5a20b92e98da
+    type: title
+    task:
+      id: 39e9aaf2-6799-4be9-b93a-5a20b92e98da
+      version: -1
+      name: Fin
+      description: ""
+      type: title
+      iscommand: false
+      brand: ""
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 450, "y": 1400}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+view: |-
+  {
+    "linkLabelsPosition": {},
+    "paper": {
+      "dimensions": {
+        "height": 1415,
+        "width": 925,
+        "x": 250,
+        "y": 50
+      }
+    }
+  }
+inputs:
+  - key: IP
+    value: {}
+    required: false
+    description: Une ou plusieurs adresses IP à enrichir.
+    playbookInputQuery: null
+  - key: Domain
+    value: {}
+    required: false
+    description: Un ou plusieurs domaines à enrichir.
+    playbookInputQuery: null
+  - key: URL
+    value: {}
+    required: false
+    description: Une ou plusieurs URLs à enrichir.
+    playbookInputQuery: null
+  - key: FileHash
+    value: {}
+    required: false
+    description: Un ou plusieurs hash de fichiers à enrichir.
+    playbookInputQuery: null
+outputs:
+  - contextPath: Enrichissement.Verdict
+    description: Verdict consolidé - Malveillant, Suspect ou Non concluant.
+    type: string
+  - contextPath: DBotScore
+    description: Scores de réputation renvoyés par les intégrations pour chaque indicateur.
+    type: unknown
+fromversion: 6.5.0
+tests:
+  - No tests (auto formatted)
