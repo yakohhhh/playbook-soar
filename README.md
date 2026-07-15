@@ -21,6 +21,7 @@ sur une instance vierge sans installer d'intégration.
 | Enrichissement de compte utilisateur | [playbooks/enrichissement-compte.yml](playbooks/enrichissement-compte.yml) | [docs/enrichissement-compte.md](docs/enrichissement-compte.md) |
 | Réponse malware sur endpoint | [playbooks/reponse-malware-endpoint.yml](playbooks/reponse-malware-endpoint.yml) | [docs/reponse-malware-endpoint.md](docs/reponse-malware-endpoint.md) |
 | Investigation de connexions suspectes / brute force | [playbooks/investigation-brute-force.yml](playbooks/investigation-brute-force.yml) | [docs/investigation-brute-force.md](docs/investigation-brute-force.md) |
+| Offboarding sécurisé d'un collaborateur | [playbooks/offboarding-collaborateur.yml](playbooks/offboarding-collaborateur.yml) | [docs/offboarding-collaborateur.md](docs/offboarding-collaborateur.md) |
 
 ## Organisation
 
