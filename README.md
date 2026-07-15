@@ -18,6 +18,7 @@ sur une instance vierge sans installer d'intégration.
 | Triage d'email de phishing | [playbooks/triage-phishing.yml](playbooks/triage-phishing.yml) | [docs/triage-phishing.md](docs/triage-phishing.md) |
 | Blocage d'IP malveillante | [playbooks/blocage-ip.yml](playbooks/blocage-ip.yml) | [docs/blocage-ip.md](docs/blocage-ip.md) |
 | Déduplication et corrélation d'incidents | [playbooks/deduplication-incidents.yml](playbooks/deduplication-incidents.yml) | [docs/deduplication-incidents.md](docs/deduplication-incidents.md) |
+| Enrichissement de compte utilisateur | [playbooks/enrichissement-compte.yml](playbooks/enrichissement-compte.yml) | [docs/enrichissement-compte.md](docs/enrichissement-compte.md) |
 
 ## Organisation
 

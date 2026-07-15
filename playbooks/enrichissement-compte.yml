@@ -1,0 +1,402 @@
+id: enrichissement-compte
+version: -1
+name: Enrichissement de compte utilisateur
+description: |-
+  Résout un compte dans l'Active Directory à partir d'un identifiant, puis remonte les attributs utiles
+  au triage : groupes, valeur userAccountControl (pour lire l'état activé ou désactivé) et un drapeau
+  compte à privilèges basé sur un mot-clé de groupe. Si le compte est introuvable ou si l'intégration
+  n'est pas disponible, le playbook se termine proprement avec un statut adapté au lieu de planter.
+starttaskid: "0"
+tasks:
+  "0":
+    id: "0"
+    taskid: e7fb562a-ed56-40b0-a3c9-5c7ff7a78c0d
+    type: start
+    task:
+      id: e7fb562a-ed56-40b0-a3c9-5c7ff7a78c0d
+      version: -1
+      name: ""
+      description: ""
+      iscommand: false
+      brand: ""
+    nexttasks:
+      '#none#':
+        - "1"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 450, "y": 50}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "1":
+    id: "1"
+    taskid: 93bff332-2e6c-4236-974f-6c7109323f4f
+    type: title
+    task:
+      id: 93bff332-2e6c-4236-974f-6c7109323f4f
+      version: -1
+      name: Enrichissement de compte
+      description: ""
+      type: title
+      iscommand: false
+      brand: ""
+    nexttasks:
+      '#none#':
+        - "2"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 450, "y": 190}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "2":
+    id: "2"
+    taskid: 25207f51-6833-4916-83ba-f1267ad603ba
+    type: regular
+    task:
+      id: 25207f51-6833-4916-83ba-f1267ad603ba
+      version: -1
+      name: Interroger l'Active Directory
+      description: Récupère le compte via la commande ad-get-user.
+      script: '|||ad-get-user'
+      type: regular
+      iscommand: true
+      brand: ""
+    scriptarguments:
+      username:
+        simple: "${inputs.NomUtilisateur}"
+    nexttasks:
+      '#none#':
+        - "3"
+    separatecontext: false
+    continueonerror: true
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 450, "y": 330}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: true
+    quietmode: 0
+  "3":
+    id: "3"
+    taskid: 307e65bf-8d1b-4cae-aa40-0c78a9a35551
+    type: condition
+    task:
+      id: 307e65bf-8d1b-4cae-aa40-0c78a9a35551
+      version: -1
+      name: Compte trouvé ?
+      description: Vrai si l'Active Directory a renvoyé un compte.
+      type: condition
+      iscommand: false
+      brand: ""
+    nexttasks:
+      '#default#':
+        - "9"
+      "yes":
+        - "4"
+    conditions:
+      - label: "yes"
+        condition:
+          - - operator: isExists
+              left:
+                value:
+                  simple: ActiveDirectory.Users.dn
+                iscontext: true
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 450, "y": 470}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "4":
+    id: "4"
+    taskid: af0368f4-92df-4434-a587-28c5eff96eac
+    type: regular
+    task:
+      id: af0368f4-92df-4434-a587-28c5eff96eac
+      version: -1
+      name: Compte trouvé
+      description: Marque le compte comme trouvé.
+      scriptName: Set
+      type: regular
+      iscommand: false
+      brand: ""
+    scriptarguments:
+      key:
+        simple: Compte.Statut
+      value:
+        simple: Trouvé
+    nexttasks:
+      '#none#':
+        - "5"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 250, "y": 640}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "5":
+    id: "5"
+    taskid: 0d2dc414-5e50-4f8b-9d52-1e75f3244345
+    type: regular
+    task:
+      id: 0d2dc414-5e50-4f8b-9d52-1e75f3244345
+      version: -1
+      name: Retenir les groupes
+      description: Enregistre les groupes d'appartenance du compte.
+      scriptName: Set
+      type: regular
+      iscommand: false
+      brand: ""
+    scriptarguments:
+      key:
+        simple: Compte.Groupes
+      value:
+        simple: "${ActiveDirectory.Users.memberOf}"
+    nexttasks:
+      '#none#':
+        - "6"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 250, "y": 780}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "6":
+    id: "6"
+    taskid: 985dba69-75fb-4298-8181-f3d76d92ea4f
+    type: regular
+    task:
+      id: 985dba69-75fb-4298-8181-f3d76d92ea4f
+      version: -1
+      name: Retenir l'état du compte
+      description: Enregistre la valeur userAccountControl, qui indique si le compte est désactivé.
+      scriptName: Set
+      type: regular
+      iscommand: false
+      brand: ""
+    scriptarguments:
+      key:
+        simple: Compte.UAC
+      value:
+        simple: "${ActiveDirectory.Users.userAccountControl}"
+    nexttasks:
+      '#none#':
+        - "7"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 250, "y": 920}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "7":
+    id: "7"
+    taskid: 4a47a655-7764-4265-a791-72531bb99110
+    type: condition
+    task:
+      id: 4a47a655-7764-4265-a791-72531bb99110
+      version: -1
+      name: Compte à privilèges ?
+      description: Vrai si un groupe du compte contient le mot-clé de privilège fourni en entrée.
+      type: condition
+      iscommand: false
+      brand: ""
+    nexttasks:
+      '#default#':
+        - "10"
+      "yes":
+        - "8"
+    conditions:
+      - label: "yes"
+        condition:
+          - - operator: containsString
+              left:
+                value:
+                  simple: ActiveDirectory.Users.memberOf
+                iscontext: true
+              right:
+                value:
+                  simple: inputs.MotifGroupePrivilegie
+                iscontext: true
+              ignorecase: true
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 250, "y": 1060}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "8":
+    id: "8"
+    taskid: ee13608c-3d4c-47c3-b270-652dc39d7307
+    type: regular
+    task:
+      id: ee13608c-3d4c-47c3-b270-652dc39d7307
+      version: -1
+      name: Compte à privilèges
+      description: Marque le compte comme étant à privilèges.
+      scriptName: Set
+      type: regular
+      iscommand: false
+      brand: ""
+    scriptarguments:
+      key:
+        simple: Compte.APrivileges
+      value:
+        simple: Oui
+    nexttasks:
+      '#none#':
+        - "11"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 120, "y": 1230}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "9":
+    id: "9"
+    taskid: d749f35a-d434-45bf-9de3-051eab8a4d93
+    type: regular
+    task:
+      id: d749f35a-d434-45bf-9de3-051eab8a4d93
+      version: -1
+      name: Compte introuvable
+      description: Aucun compte renvoyé par l'Active Directory.
+      scriptName: Set
+      type: regular
+      iscommand: false
+      brand: ""
+    scriptarguments:
+      key:
+        simple: Compte.Statut
+      value:
+        simple: Introuvable
+    nexttasks:
+      '#none#':
+        - "11"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 660, "y": 640}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "10":
+    id: "10"
+    taskid: 423be11a-cfef-436f-b218-2092cadd3b9d
+    type: regular
+    task:
+      id: 423be11a-cfef-436f-b218-2092cadd3b9d
+      version: -1
+      name: Compte standard
+      description: Aucun groupe à privilèges détecté.
+      scriptName: Set
+      type: regular
+      iscommand: false
+      brand: ""
+    scriptarguments:
+      key:
+        simple: Compte.APrivileges
+      value:
+        simple: Non
+    nexttasks:
+      '#none#':
+        - "11"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 400, "y": 1230}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "11":
+    id: "11"
+    taskid: bd600512-f846-4e30-84cd-09ce282cbc29
+    type: title
+    task:
+      id: bd600512-f846-4e30-84cd-09ce282cbc29
+      version: -1
+      name: Fin
+      description: ""
+      type: title
+      iscommand: false
+      brand: ""
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 450, "y": 1400}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+view: |-
+  {
+    "linkLabelsPosition": {},
+    "paper": {
+      "dimensions": {
+        "height": 1415,
+        "width": 845,
+        "x": 120,
+        "y": 50
+      }
+    }
+  }
+inputs:
+  - key: NomUtilisateur
+    value: {}
+    required: false
+    description: Identifiant du compte à enrichir (login, avec ou sans préfixe de domaine).
+    playbookInputQuery: null
+  - key: MotifGroupePrivilegie
+    value:
+      simple: Admin
+    required: false
+    description: |-
+      Mot-clé recherché dans les groupes du compte pour signaler un compte à privilèges. Par défaut
+      "Admin", ce qui couvre Domain Admins, Administrators, etc.
+    playbookInputQuery: null
+outputs:
+  - contextPath: Compte.Statut
+    description: Résultat de la résolution - Trouvé ou Introuvable.
+    type: string
+  - contextPath: Compte.Groupes
+    description: Groupes d'appartenance du compte.
+    type: unknown
+  - contextPath: Compte.UAC
+    description: Valeur userAccountControl, à lire pour savoir si le compte est désactivé.
+    type: unknown
+  - contextPath: Compte.APrivileges
+    description: Oui si un groupe à privilèges a été détecté, Non sinon.
+    type: string
+fromversion: 6.5.0
+tests:
+  - No tests (auto formatted)
