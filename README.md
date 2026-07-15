@@ -12,6 +12,7 @@ sur une instance vierge sans installer d'intégration.
 | --- | --- | --- |
 | Prise en main XSOAR - Triage | [playbooks/prise-en-main-xsoar.yml](playbooks/prise-en-main-xsoar.yml) | [docs/prise-en-main-xsoar.md](docs/prise-en-main-xsoar.md) |
 | Notification et escalade | [playbooks/notification-et-escalade.yml](playbooks/notification-et-escalade.yml) | [docs/notification-et-escalade.md](docs/notification-et-escalade.md) |
+| Clôture automatique des faux positifs connus | [playbooks/cloture-faux-positifs.yml](playbooks/cloture-faux-positifs.yml) | [docs/cloture-faux-positifs.md](docs/cloture-faux-positifs.md) |
 
 ## Organisation
 
