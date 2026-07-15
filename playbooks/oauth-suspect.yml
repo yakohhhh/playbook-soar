@@ -1,0 +1,479 @@
+id: oauth-suspect
+version: -1
+name: Consentement OAuth suspect (M365 / Google Workspace)
+description: |-
+  Trie une alerte de consentement OAuth. Si l'application est déjà approuvée, il n'y a rien à faire.
+  Sinon, le playbook évalue le risque des permissions accordées (accès aux mails, aux fichiers, à
+  l'annuaire, accès hors ligne). Sur un consentement à risque, il demande une validation avant de
+  révoquer l'application et de prévenir l'utilisateur. La révocation et la notification sont des tâches
+  à exécuter sur le fournisseur SaaS, remplaçables par ses commandes.
+starttaskid: "0"
+tasks:
+  "0":
+    id: "0"
+    taskid: 76123b56-f687-425e-95f0-81279b1a2394
+    type: start
+    task:
+      id: 76123b56-f687-425e-95f0-81279b1a2394
+      version: -1
+      name: ""
+      description: ""
+      iscommand: false
+      brand: ""
+    nexttasks:
+      '#none#':
+        - "1"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 450, "y": 50}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "1":
+    id: "1"
+    taskid: b5b9518e-26c9-45af-b900-33049e5eeb1a
+    type: title
+    task:
+      id: b5b9518e-26c9-45af-b900-33049e5eeb1a
+      version: -1
+      name: Consentement OAuth suspect
+      description: ""
+      type: title
+      iscommand: false
+      brand: ""
+    nexttasks:
+      '#none#':
+        - "2"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 450, "y": 190}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "2":
+    id: "2"
+    taskid: ff17c327-f93c-4458-9edf-f7c55ea4285d
+    type: condition
+    task:
+      id: ff17c327-f93c-4458-9edf-f7c55ea4285d
+      version: -1
+      name: Application approuvée ?
+      description: Une application déjà approuvée ne déclenche aucune action.
+      type: condition
+      iscommand: false
+      brand: ""
+    nexttasks:
+      '#default#':
+        - "4"
+      "yes":
+        - "3"
+    conditions:
+      - label: "yes"
+        condition:
+          - - operator: isEqualString
+              left:
+                value:
+                  simple: inputs.AppApprouvee
+                iscontext: true
+              right:
+                value:
+                  simple: "true"
+              ignorecase: true
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 450, "y": 330}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "3":
+    id: "3"
+    taskid: 3a355d56-9aa7-4021-987d-64f33dc70195
+    type: regular
+    task:
+      id: 3a355d56-9aa7-4021-987d-64f33dc70195
+      version: -1
+      name: Application approuvée
+      description: L'application figure dans les applications approuvées.
+      scriptName: Set
+      type: regular
+      iscommand: false
+      brand: ""
+    scriptarguments:
+      key:
+        simple: OAuth.Statut
+      value:
+        simple: Application approuvée - RAS
+    nexttasks:
+      '#none#':
+        - "12"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 230, "y": 480}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "4":
+    id: "4"
+    taskid: 35f6bcce-5fca-4d2e-9e42-759b08aad786
+    type: condition
+    task:
+      id: 35f6bcce-5fca-4d2e-9e42-759b08aad786
+      version: -1
+      name: Permissions à risque ?
+      description: Vrai si les scopes accordés touchent aux mails, fichiers, annuaire ou accès hors ligne.
+      type: condition
+      iscommand: false
+      brand: ""
+    nexttasks:
+      '#default#':
+        - "10"
+      "yes":
+        - "5"
+    conditions:
+      - label: "yes"
+        condition:
+          - - operator: containsString
+              left:
+                value:
+                  simple: inputs.Scopes
+                iscontext: true
+              right:
+                value:
+                  simple: Mail
+              ignorecase: true
+            - operator: containsString
+              left:
+                value:
+                  simple: inputs.Scopes
+                iscontext: true
+              right:
+                value:
+                  simple: Files
+              ignorecase: true
+            - operator: containsString
+              left:
+                value:
+                  simple: inputs.Scopes
+                iscontext: true
+              right:
+                value:
+                  simple: Directory
+              ignorecase: true
+            - operator: containsString
+              left:
+                value:
+                  simple: inputs.Scopes
+                iscontext: true
+              right:
+                value:
+                  simple: full_access
+              ignorecase: true
+            - operator: containsString
+              left:
+                value:
+                  simple: inputs.Scopes
+                iscontext: true
+              right:
+                value:
+                  simple: offline_access
+              ignorecase: true
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 600, "y": 480}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "5":
+    id: "5"
+    taskid: a30bd1bc-f20c-4eb3-8585-1693b7cb55a2
+    type: regular
+    task:
+      id: a30bd1bc-f20c-4eb3-8585-1693b7cb55a2
+      version: -1
+      name: Risque élevé
+      description: Application inconnue avec des permissions sensibles.
+      scriptName: Set
+      type: regular
+      iscommand: false
+      brand: ""
+    scriptarguments:
+      key:
+        simple: OAuth.Risque
+      value:
+        simple: Élevé
+    nexttasks:
+      '#none#':
+        - "6"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 600, "y": 620}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "6":
+    id: "6"
+    taskid: e4ba9550-c66e-495b-b6f4-27ab7d59d1e1
+    type: condition
+    task:
+      id: e4ba9550-c66e-495b-b6f4-27ab7d59d1e1
+      version: -1
+      name: Valider la révocation
+      description: Demande une validation avant de révoquer l'application.
+      type: condition
+      iscommand: false
+      brand: ""
+    nexttasks:
+      '#default#':
+        - "11"
+      "Révoquer":
+        - "7"
+      "Ignorer":
+        - "11"
+    separatecontext: false
+    view: |-
+      {"position": {"x": 600, "y": 760}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    message:
+      to:
+      subject:
+        simple: "Validation de révocation d'application OAuth"
+      body:
+        simple: "Application ${inputs.Application} consentie par ${inputs.Utilisateur}, permissions à risque. Révoquer ? Répondre \"Révoquer\" ou \"Ignorer\"."
+      methods: []
+      format: ""
+      bcc:
+      cc:
+      timings:
+        retriescount: 1
+        retriesinterval: 20
+        completeafterreplies: 1
+      replyOptions:
+        - "Révoquer"
+        - "Ignorer"
+    skipunavailable: false
+    quietmode: 0
+  "7":
+    id: "7"
+    taskid: 1f1e861b-b90e-4cb3-b87b-92308b37ef45
+    type: regular
+    task:
+      id: 1f1e861b-b90e-4cb3-b87b-92308b37ef45
+      version: -1
+      name: Révoquer l'application
+      description: |-
+        Tâche à exécuter : révoquer l'application et ses consentements sur le fournisseur SaaS, puis
+        compléter la tâche. Remplaçable par la commande du fournisseur (msgraph, gsuite).
+      type: regular
+      iscommand: false
+      brand: ""
+    nexttasks:
+      '#none#':
+        - "8"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 450, "y": 930}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "8":
+    id: "8"
+    taskid: 1be9ff00-0b18-41ff-b7b4-ad80e107a8e1
+    type: regular
+    task:
+      id: 1be9ff00-0b18-41ff-b7b4-ad80e107a8e1
+      version: -1
+      name: Prévenir l'utilisateur
+      description: Informer l'utilisateur de la révocation, puis compléter la tâche.
+      type: regular
+      iscommand: false
+      brand: ""
+    nexttasks:
+      '#none#':
+        - "9"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 450, "y": 1070}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "9":
+    id: "9"
+    taskid: b892402b-1409-4ee6-a7de-066f8c5ec5cb
+    type: regular
+    task:
+      id: b892402b-1409-4ee6-a7de-066f8c5ec5cb
+      version: -1
+      name: Application révoquée
+      description: Journalise la révocation.
+      scriptName: Set
+      type: regular
+      iscommand: false
+      brand: ""
+    scriptarguments:
+      key:
+        simple: OAuth.Statut
+      value:
+        simple: Application révoquée
+    nexttasks:
+      '#none#':
+        - "12"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 450, "y": 1210}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "10":
+    id: "10"
+    taskid: a3782379-eb36-4cc8-8e7c-3ee80d59509a
+    type: regular
+    task:
+      id: a3782379-eb36-4cc8-8e7c-3ee80d59509a
+      version: -1
+      name: Scopes limités
+      description: Application inconnue mais avec des permissions limitées.
+      scriptName: Set
+      type: regular
+      iscommand: false
+      brand: ""
+    scriptarguments:
+      key:
+        simple: OAuth.Statut
+      value:
+        simple: Application inconnue, scopes limités - à surveiller
+    nexttasks:
+      '#none#':
+        - "12"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 830, "y": 620}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "11":
+    id: "11"
+    taskid: cf3fd439-b38c-407b-97d0-3c2c8487359b
+    type: regular
+    task:
+      id: cf3fd439-b38c-407b-97d0-3c2c8487359b
+      version: -1
+      name: Révocation non validée
+      description: L'analyste n'a pas validé la révocation.
+      scriptName: Set
+      type: regular
+      iscommand: false
+      brand: ""
+    scriptarguments:
+      key:
+        simple: OAuth.Statut
+      value:
+        simple: Révocation non validée
+    nexttasks:
+      '#none#':
+        - "12"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 750, "y": 930}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "12":
+    id: "12"
+    taskid: 2ca040b7-772c-40e8-92c3-d61a57d720d1
+    type: title
+    task:
+      id: 2ca040b7-772c-40e8-92c3-d61a57d720d1
+      version: -1
+      name: Fin
+      description: ""
+      type: title
+      iscommand: false
+      brand: ""
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 550, "y": 1360}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+view: |-
+  {
+    "linkLabelsPosition": {},
+    "paper": {
+      "dimensions": {
+        "height": 1375,
+        "width": 1055,
+        "x": 230,
+        "y": 50
+      }
+    }
+  }
+inputs:
+  - key: Application
+    value: {}
+    required: false
+    description: Nom ou identifiant de l'application OAuth.
+    playbookInputQuery: null
+  - key: Utilisateur
+    value: {}
+    required: false
+    description: Utilisateur qui a accordé le consentement.
+    playbookInputQuery: null
+  - key: Scopes
+    value: {}
+    required: false
+    description: Permissions accordées à l'application (liste des scopes).
+    playbookInputQuery: null
+  - key: AppApprouvee
+    value:
+      simple: "false"
+    required: false
+    description: Mettre "true" si l'application figure dans les applications approuvées de l'entreprise.
+    playbookInputQuery: null
+outputs:
+  - contextPath: OAuth.Statut
+    description: Résultat - approuvée, révoquée, à surveiller, ou révocation non validée.
+    type: string
+  - contextPath: OAuth.Risque
+    description: Niveau de risque des permissions.
+    type: string
+fromversion: 6.5.0
+tests:
+  - No tests (auto formatted)
