@@ -11,6 +11,7 @@ sur une instance vierge sans installer d'intégration.
 | Playbook | Fichier | Doc |
 | --- | --- | --- |
 | Prise en main XSOAR - Triage | [playbooks/prise-en-main-xsoar.yml](playbooks/prise-en-main-xsoar.yml) | [docs/prise-en-main-xsoar.md](docs/prise-en-main-xsoar.md) |
+| Clôture automatique des faux positifs connus | [playbooks/cloture-faux-positifs.yml](playbooks/cloture-faux-positifs.yml) | [docs/cloture-faux-positifs.md](docs/cloture-faux-positifs.md) |
 
 ## Organisation
 
