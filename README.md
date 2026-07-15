@@ -15,6 +15,7 @@ sur une instance vierge sans installer d'intégration.
 | Clôture automatique des faux positifs connus | [playbooks/cloture-faux-positifs.yml](playbooks/cloture-faux-positifs.yml) | [docs/cloture-faux-positifs.md](docs/cloture-faux-positifs.md) |
 | Enrichissement d'indicateurs (générique) | [playbooks/enrichissement-indicateurs.yml](playbooks/enrichissement-indicateurs.yml) | [docs/enrichissement-indicateurs.md](docs/enrichissement-indicateurs.md) |
 | Enrichissement de vulnérabilité (CVE) | [playbooks/enrichissement-cve.yml](playbooks/enrichissement-cve.yml) | [docs/enrichissement-cve.md](docs/enrichissement-cve.md) |
+| Triage d'email de phishing | [playbooks/triage-phishing.yml](playbooks/triage-phishing.yml) | [docs/triage-phishing.md](docs/triage-phishing.md) |
 
 ## Organisation
 
