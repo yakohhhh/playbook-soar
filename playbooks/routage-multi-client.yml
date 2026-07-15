@@ -1,0 +1,309 @@
+id: routage-multi-client
+version: -1
+name: Routage multi-client d'un incident (SOC managé)
+description: |-
+  Aiguille un incident vers le bon client dans un SOC managé. À partir du client identifié (déterminé
+  depuis l'actif en amont), le playbook affecte l'incident au propriétaire du client et restreint sa
+  visibilité au rôle du client, ce qui évite tout mélange de données entre clients. Il pose le tag
+  client dans le contexte et notifie le client en réutilisant le playbook de notification. Tous les
+  paramètres de routage viennent des entrées, aucun client n'est codé en dur.
+starttaskid: "0"
+tasks:
+  "0":
+    id: "0"
+    taskid: 6d2bcae9-3d90-4896-a518-19fca4746922
+    type: start
+    task:
+      id: 6d2bcae9-3d90-4896-a518-19fca4746922
+      version: -1
+      name: ""
+      description: ""
+      iscommand: false
+      brand: ""
+    nexttasks:
+      '#none#':
+        - "1"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 450, "y": 50}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "1":
+    id: "1"
+    taskid: bb561610-8eb0-4aeb-b15e-30470a45ec43
+    type: title
+    task:
+      id: bb561610-8eb0-4aeb-b15e-30470a45ec43
+      version: -1
+      name: Routage multi-client
+      description: ""
+      type: title
+      iscommand: false
+      brand: ""
+    nexttasks:
+      '#none#':
+        - "2"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 450, "y": 190}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "2":
+    id: "2"
+    taskid: d29a32bc-d22e-487d-90cd-f418ab10284f
+    type: condition
+    task:
+      id: d29a32bc-d22e-487d-90cd-f418ab10284f
+      version: -1
+      name: Client identifié ?
+      description: On ne route que si le client a été déterminé à partir de l'actif.
+      type: condition
+      iscommand: false
+      brand: ""
+    nexttasks:
+      '#default#':
+        - "7"
+      "yes":
+        - "3"
+    conditions:
+      - label: "yes"
+        condition:
+          - - operator: isNotEmpty
+              left:
+                value:
+                  simple: inputs.Client
+                iscontext: true
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 450, "y": 330}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "3":
+    id: "3"
+    taskid: 3b743c9d-3101-42bd-a805-46f9b2d5aa08
+    type: regular
+    task:
+      id: 3b743c9d-3101-42bd-a805-46f9b2d5aa08
+      version: -1
+      name: Affecter et cloisonner l'incident
+      description: |-
+        Affecte l'incident au propriétaire du client et restreint sa visibilité au rôle du client, pour
+        que les données ne soient pas visibles des autres clients.
+      script: Builtin|||setIncident
+      type: regular
+      iscommand: true
+      brand: Builtin
+    scriptarguments:
+      owner:
+        simple: "${inputs.ProprietaireClient}"
+      roles:
+        simple: "${inputs.RoleClient}"
+    nexttasks:
+      '#none#':
+        - "4"
+    separatecontext: false
+    continueonerror: true
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 280, "y": 490}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "4":
+    id: "4"
+    taskid: aa073faf-0c74-4f0c-9f54-ca771c6be85a
+    type: regular
+    task:
+      id: aa073faf-0c74-4f0c-9f54-ca771c6be85a
+      version: -1
+      name: Poser le tag client
+      description: Enregistre le client dans le contexte de l'incident.
+      scriptName: Set
+      type: regular
+      iscommand: false
+      brand: ""
+    scriptarguments:
+      key:
+        simple: Routage.Client
+      value:
+        simple: "${inputs.Client}"
+    nexttasks:
+      '#none#':
+        - "5"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 280, "y": 630}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "5":
+    id: "5"
+    taskid: 38beab3c-47a2-484f-b761-fe41a49f5242
+    type: playbook
+    task:
+      id: 38beab3c-47a2-484f-b761-fe41a49f5242
+      version: -1
+      name: Notifier le client
+      description: Réutilise le playbook de notification et escalade pour prévenir l'équipe du client.
+      playbookName: Notification et escalade
+      type: playbook
+      iscommand: false
+      brand: ""
+    scriptarguments:
+      DestinatairePrioritaire:
+        simple: "${inputs.DestinataireClient}"
+      DestinataireStandard:
+        simple: "${inputs.DestinataireClient}"
+    nexttasks:
+      '#none#':
+        - "6"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 280, "y": 770}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "6":
+    id: "6"
+    taskid: 464066f1-aecd-44fa-9ad6-ae2e04a00ec9
+    type: regular
+    task:
+      id: 464066f1-aecd-44fa-9ad6-ae2e04a00ec9
+      version: -1
+      name: Incident routé
+      description: Journalise le routage vers le client.
+      scriptName: Set
+      type: regular
+      iscommand: false
+      brand: ""
+    scriptarguments:
+      key:
+        simple: Routage.Statut
+      value:
+        simple: Routé vers le client
+    nexttasks:
+      '#none#':
+        - "8"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 280, "y": 910}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "7":
+    id: "7"
+    taskid: b0b83a19-588d-4590-8be8-418c08342dc9
+    type: regular
+    task:
+      id: b0b83a19-588d-4590-8be8-418c08342dc9
+      version: -1
+      name: Client non identifié
+      description: Le client n'a pas pu être déterminé, l'incident part en routage manuel.
+      scriptName: Set
+      type: regular
+      iscommand: false
+      brand: ""
+    scriptarguments:
+      key:
+        simple: Routage.Statut
+      value:
+        simple: Client non identifié - routage manuel
+    nexttasks:
+      '#none#':
+        - "8"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 660, "y": 490}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "8":
+    id: "8"
+    taskid: b9ea76b5-7fa0-498a-8505-3cd87acb1c5a
+    type: title
+    task:
+      id: b9ea76b5-7fa0-498a-8505-3cd87acb1c5a
+      version: -1
+      name: Fin
+      description: ""
+      type: title
+      iscommand: false
+      brand: ""
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 450, "y": 1080}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+view: |-
+  {
+    "linkLabelsPosition": {},
+    "paper": {
+      "dimensions": {
+        "height": 1095,
+        "width": 835,
+        "x": 280,
+        "y": 50
+      }
+    }
+  }
+inputs:
+  - key: Client
+    value: {}
+    required: false
+    description: Client déterminé à partir de l'actif concerné (domaine, plage IP, tag).
+    playbookInputQuery: null
+  - key: ProprietaireClient
+    value: {}
+    required: false
+    description: Propriétaire ou équipe à qui affecter l'incident pour ce client.
+    playbookInputQuery: null
+  - key: RoleClient
+    value: {}
+    required: false
+    description: Rôle XSOAR du client, pour restreindre la visibilité de l'incident à ce client.
+    playbookInputQuery: null
+  - key: DestinataireClient
+    value: {}
+    required: false
+    description: Destinataire ou canal de notification du client.
+    playbookInputQuery: null
+outputs:
+  - contextPath: Routage.Client
+    description: Client vers lequel l'incident a été routé.
+    type: string
+  - contextPath: Routage.Statut
+    description: Résultat - Routé vers le client, ou Client non identifié - routage manuel.
+    type: string
+fromversion: 6.5.0
+tests:
+  - No tests (auto formatted)
