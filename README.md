@@ -43,3 +43,17 @@ playbook-soar/
 
 - Cortex XSOAR 6.5 ou plus récent côté serveur.
 - `demisto-sdk` si on veut valider ou pousser depuis la ligne de commande (`pip install demisto-sdk`).
+
+## Valider les playbooks
+
+`demisto-sdk validate` attend l'arborescence complète du dépôt "content" (un dossier `Packs/` à la
+racine) et échoue ici avec `No such file or directory: 'Packs'`. Ce dépôt garde une structure simple,
+donc on valide directement contre le schéma de playbook fourni par demisto-sdk :
+
+```
+python validate-playbooks.py                       # tous les playbooks de playbooks/
+python validate-playbooks.py playbooks/xxx.yml     # un seul fichier
+```
+
+Le script a besoin d'un environnement où `demisto-sdk` est installé (il en réutilise le schéma et la
+dépendance `pykwalify`). Il vérifie la conformité au format, pas le comportement à l'exécution.

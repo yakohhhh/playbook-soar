@@ -16,6 +16,7 @@ tasks:
       id: e19ee039-136b-4fb2-adf0-2a4bb8e68fff
       version: -1
       name: ""
+      description: ""
       iscommand: false
       brand: ""
     nexttasks:
@@ -38,6 +39,7 @@ tasks:
       id: 88a7c618-b179-4c0f-9597-8bcf3ecd3a26
       version: -1
       name: Triage
+      description: ""
       type: title
       iscommand: false
       brand: ""
@@ -245,6 +247,7 @@ tasks:
       id: 08c55d8c-8f96-439d-838d-9d0ee86d91b1
       version: -1
       name: Fin du triage
+      description: ""
       type: title
       iscommand: false
       brand: ""
