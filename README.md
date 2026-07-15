@@ -1,7 +1,7 @@
 # playbook-soar
 
-Playbooks Cortex XSOAR versionnés dans ce dépôt. On y garde le contenu SOAR au format YAML pour le
-relire, le partager et le réimporter d'une instance à l'autre sans repasser par des exports manuels.
+Playbooks Cortex XSOAR versionnés dans ce dépôt. Le contenu SOAR reste au format YAML : on le relit et
+on le réimporte d'une instance à l'autre sans repasser par des exports manuels.
 
 Le premier playbook sert de prise en main : il n'utilise que des scripts natifs XSOAR, donc il tourne
 sur une instance vierge sans installer d'intégration.
@@ -11,6 +11,7 @@ sur une instance vierge sans installer d'intégration.
 | Playbook | Fichier | Doc |
 | --- | --- | --- |
 | Prise en main XSOAR - Triage | [playbooks/prise-en-main-xsoar.yml](playbooks/prise-en-main-xsoar.yml) | [docs/prise-en-main-xsoar.md](docs/prise-en-main-xsoar.md) |
+| Notification et escalade | [playbooks/notification-et-escalade.yml](playbooks/notification-et-escalade.yml) | [docs/notification-et-escalade.md](docs/notification-et-escalade.md) |
 | Clôture automatique des faux positifs connus | [playbooks/cloture-faux-positifs.yml](playbooks/cloture-faux-positifs.yml) | [docs/cloture-faux-positifs.md](docs/cloture-faux-positifs.md) |
 
 ## Organisation

@@ -1,0 +1,480 @@
+id: notification-et-escalade
+version: -1
+name: Notification et escalade
+description: |-
+  Notifie un destinataire choisi selon la sévérité de l'incident et attend un accusé de réception.
+  Sans accusé dans le délai, l'incident est escaladé vers un autre contact. L'accusé passe par une
+  tâche de communication native XSOAR : par défaut le destinataire répond depuis le plan de travail de
+  l'incident, et on peut pousser la demande sur un canal externe (Email, Slack ou Mattermost) en
+  renseignant la méthode d'envoi. Aucun destinataire n'est codé en dur. Une création de ticket ITSM
+  manuelle peut être activée en entrée.
+starttaskid: "0"
+tasks:
+  "0":
+    id: "0"
+    taskid: 8e516e2d-9e0d-4b21-b903-4e2704d6870d
+    type: start
+    task:
+      id: 8e516e2d-9e0d-4b21-b903-4e2704d6870d
+      version: -1
+      name: ""
+      iscommand: false
+      brand: ""
+    nexttasks:
+      '#none#':
+        - "1"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 475, "y": 50}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "1":
+    id: "1"
+    taskid: 63243361-8caa-4938-adef-ca092a8a2097
+    type: title
+    task:
+      id: 63243361-8caa-4938-adef-ca092a8a2097
+      version: -1
+      name: Notification et escalade
+      type: title
+      iscommand: false
+      brand: ""
+    nexttasks:
+      '#none#':
+        - "2"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 475, "y": 190}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "2":
+    id: "2"
+    taskid: 8c26a615-4ff9-4dba-8da5-352e6ae5c597
+    type: condition
+    task:
+      id: 8c26a615-4ff9-4dba-8da5-352e6ae5c597
+      version: -1
+      name: Sévérité au-dessus du seuil ?
+      description: Aiguille vers le destinataire prioritaire ou le destinataire standard selon la sévérité.
+      type: condition
+      iscommand: false
+      brand: ""
+    nexttasks:
+      '#default#':
+        - "4"
+      "yes":
+        - "3"
+    conditions:
+      - label: "yes"
+        condition:
+          - - operator: greaterThanOrEqual
+              left:
+                value:
+                  simple: incident.severity
+                iscontext: true
+              right:
+                value:
+                  simple: inputs.SeuilEscalade
+                iscontext: true
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 475, "y": 340}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "3":
+    id: "3"
+    taskid: fc5d7310-922d-4e48-8239-3acbd2f89488
+    type: regular
+    task:
+      id: fc5d7310-922d-4e48-8239-3acbd2f89488
+      version: -1
+      name: Cibler le destinataire prioritaire
+      description: Retient le destinataire prioritaire pour la notification.
+      scriptName: Set
+      type: regular
+      iscommand: false
+      brand: ""
+    scriptarguments:
+      key:
+        simple: Notification.Destinataire
+      value:
+        simple: "${inputs.DestinatairePrioritaire}"
+    nexttasks:
+      '#none#':
+        - "5"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 265, "y": 520}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "4":
+    id: "4"
+    taskid: 0ea954e8-2006-47a3-aaff-e8a35f40f8dc
+    type: regular
+    task:
+      id: 0ea954e8-2006-47a3-aaff-e8a35f40f8dc
+      version: -1
+      name: Cibler le destinataire standard
+      description: Retient le destinataire standard pour la notification.
+      scriptName: Set
+      type: regular
+      iscommand: false
+      brand: ""
+    scriptarguments:
+      key:
+        simple: Notification.Destinataire
+      value:
+        simple: "${inputs.DestinataireStandard}"
+    nexttasks:
+      '#none#':
+        - "5"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 690, "y": 520}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "5":
+    id: "5"
+    taskid: 818155f4-f270-4b0c-983d-c2a01040daf7
+    type: condition
+    task:
+      id: 818155f4-f270-4b0c-983d-c2a01040daf7
+      version: -1
+      name: Demander l'accusé de réception
+      description: |-
+        Demande un accusé au destinataire retenu. Par défaut la tâche se répond depuis le plan de
+        travail de l'incident ; renseignez une méthode d'envoi (Email, Slack, Mattermost) pour la
+        pousser sur un canal. Réponse "Acquitté" : le suivi s'arrête. Réponse "Escalader maintenant"
+        ou dépassement du SLA (si la complétion sur SLA est activée sur la tâche) : branche d'escalade.
+      type: condition
+      iscommand: false
+      brand: ""
+    nexttasks:
+      '#default#':
+        - "7"
+      "Acquitté":
+        - "6"
+      "Escalader maintenant":
+        - "7"
+    separatecontext: false
+    sla:
+      hours: 1
+      days: 0
+      weeks: 0
+    view: |-
+      {"position": {"x": 475, "y": 700}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    message:
+      to:
+        simple: "${Notification.Destinataire}"
+      subject:
+        simple: "Incident ${incident.name} - accusé de réception requis"
+      body:
+        simple: |-
+          Incident ${incident.name} (sévérité ${incident.severity}).
+          Merci d'accuser réception en répondant "Acquitté". Sans réponse sous une heure, l'incident sera escaladé.
+      methods: []
+      format: ""
+      bcc:
+      cc:
+      timings:
+        retriescount: 2
+        retriesinterval: 20
+        completeafterreplies: 1
+      replyOptions:
+        - "Acquitté"
+        - "Escalader maintenant"
+    skipunavailable: false
+    quietmode: 0
+  "6":
+    id: "6"
+    taskid: 765011bc-c25e-44da-b677-eef2161c11ed
+    type: regular
+    task:
+      id: 765011bc-c25e-44da-b677-eef2161c11ed
+      version: -1
+      name: Marquer l'accusé reçu
+      description: Enregistre que le destinataire a bien accusé réception.
+      scriptName: Set
+      type: regular
+      iscommand: false
+      brand: ""
+    scriptarguments:
+      key:
+        simple: Notification.Statut
+      value:
+        simple: Accusé reçu
+    nexttasks:
+      '#none#':
+        - "12"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 265, "y": 890}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "7":
+    id: "7"
+    taskid: 77abfc22-d1d1-4f63-9289-2e9d11452403
+    type: regular
+    task:
+      id: 77abfc22-d1d1-4f63-9289-2e9d11452403
+      version: -1
+      name: Notifier le contact d'escalade
+      description: |-
+        Envoie une notification au contact d'escalade via l'intégration de messagerie disponible.
+        La tâche est ignorée si aucune intégration ne fournit la commande send-notification.
+      script: '|||send-notification'
+      type: regular
+      iscommand: true
+      brand: ""
+    scriptarguments:
+      message:
+        simple: "Escalade : l'incident ${incident.name} n'a pas été accusé dans le délai."
+      to:
+        simple: "${inputs.DestinataireEscalade}"
+    nexttasks:
+      '#none#':
+        - "8"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 690, "y": 890}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: true
+    quietmode: 0
+  "8":
+    id: "8"
+    taskid: ec1d3db7-ddb2-45cc-b617-14b5e629e96e
+    type: regular
+    task:
+      id: ec1d3db7-ddb2-45cc-b617-14b5e629e96e
+      version: -1
+      name: Marquer l'escalade
+      description: Enregistre que l'incident a été escaladé faute d'accusé dans le délai.
+      scriptName: Set
+      type: regular
+      iscommand: false
+      brand: ""
+    scriptarguments:
+      key:
+        simple: Notification.Statut
+      value:
+        simple: Escalade - pas d'accusé dans le délai
+    nexttasks:
+      '#none#':
+        - "9"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 690, "y": 1050}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "9":
+    id: "9"
+    taskid: b972f36e-51c7-4dc7-aa68-4db651411159
+    type: condition
+    task:
+      id: b972f36e-51c7-4dc7-aa68-4db651411159
+      version: -1
+      name: Créer un ticket ITSM ?
+      description: Ouvre une tâche manuelle de création de ticket ITSM si l'entrée CreerTicketITSM vaut true.
+      type: condition
+      iscommand: false
+      brand: ""
+    nexttasks:
+      '#default#':
+        - "12"
+      "yes":
+        - "10"
+    conditions:
+      - label: "yes"
+        condition:
+          - - operator: isEqualString
+              left:
+                value:
+                  simple: inputs.CreerTicketITSM
+                iscontext: true
+              right:
+                value:
+                  simple: "true"
+              ignorecase: true
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 690, "y": 1210}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "10":
+    id: "10"
+    taskid: 7ffa360e-48d8-4303-9567-ad20bfd9d90c
+    type: regular
+    task:
+      id: 7ffa360e-48d8-4303-9567-ad20bfd9d90c
+      version: -1
+      name: Créer le ticket ITSM
+      description: |-
+        Tâche manuelle : l'analyste crée le ticket dans l'outil ITSM et complète la tâche. Elle peut
+        être remplacée par une commande automatisée (jira-create-issue, servicenow-create-record, etc.).
+      type: regular
+      iscommand: false
+      brand: ""
+    nexttasks:
+      '#none#':
+        - "11"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 910, "y": 1390}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "11":
+    id: "11"
+    taskid: 01c36aad-7841-4946-bd03-652521fe28e7
+    type: regular
+    task:
+      id: 01c36aad-7841-4946-bd03-652521fe28e7
+      version: -1
+      name: Marquer le ticket ITSM
+      description: Enregistre qu'un ticket ITSM a été créé pour cet incident.
+      scriptName: Set
+      type: regular
+      iscommand: false
+      brand: ""
+    scriptarguments:
+      key:
+        simple: Notification.TicketITSM
+      value:
+        simple: Créé (tâche manuelle)
+    nexttasks:
+      '#none#':
+        - "12"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 910, "y": 1560}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "12":
+    id: "12"
+    taskid: 061285d0-1ea2-41ca-98ae-243b205c268c
+    type: title
+    task:
+      id: 061285d0-1ea2-41ca-98ae-243b205c268c
+      version: -1
+      name: Fin
+      type: title
+      iscommand: false
+      brand: ""
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 475, "y": 1750}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+view: |-
+  {
+    "linkLabelsPosition": {},
+    "paper": {
+      "dimensions": {
+        "height": 1765,
+        "width": 1045,
+        "x": 265,
+        "y": 50
+      }
+    }
+  }
+inputs:
+  - key: SeuilEscalade
+    value:
+      simple: "3"
+    required: false
+    description: |-
+      Sévérité à partir de laquelle la notification part vers le destinataire prioritaire.
+      Échelle XSOAR : 0 = Inconnue, 0.5 = Informative, 1 = Faible, 2 = Moyenne, 3 = Élevée, 4 = Critique.
+    playbookInputQuery: null
+  - key: DestinatairePrioritaire
+    value:
+      simple: "${incident.owner}"
+    required: false
+    description: |-
+      Destinataire ou canal notifié quand la sévérité atteint le seuil (ex : équipe d'astreinte).
+      Par défaut le propriétaire de l'incident, à remplacer par un vrai canal ou utilisateur.
+    playbookInputQuery: null
+  - key: DestinataireStandard
+    value:
+      simple: "${incident.owner}"
+    required: false
+    description: |-
+      Destinataire ou canal notifié sous le seuil de sévérité.
+      Par défaut le propriétaire de l'incident, à remplacer par un vrai canal ou utilisateur.
+    playbookInputQuery: null
+  - key: DestinataireEscalade
+    value:
+      simple: "${incident.owner}"
+    required: false
+    description: |-
+      Destinataire ou canal prévenu en cas d'escalade (ex : responsable, lead SOC).
+      Par défaut le propriétaire de l'incident, à remplacer par un vrai contact.
+    playbookInputQuery: null
+  - key: CreerTicketITSM
+    value:
+      simple: "false"
+    required: false
+    description: Si "true", ajoute une tâche manuelle de création de ticket ITSM sur la branche d'escalade.
+    playbookInputQuery: null
+outputs:
+  - contextPath: Notification.Destinataire
+    description: Destinataire retenu pour la notification, selon la sévérité.
+    type: string
+  - contextPath: Notification.Statut
+    description: Résultat du suivi - "Accusé reçu" ou "Escalade - pas d'accusé dans le délai".
+    type: string
+  - contextPath: Notification.TicketITSM
+    description: Renseigné quand un ticket ITSM a été ouvert sur la branche d'escalade.
+    type: string
+fromversion: 6.5.0
+tests:
+  - No tests (auto formatted)
