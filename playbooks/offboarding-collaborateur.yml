@@ -1,0 +1,322 @@
+id: offboarding-collaborateur
+version: -1
+name: Offboarding sécurisé d'un collaborateur
+description: |-
+  À la confirmation d'un départ, coupe proprement les accès du collaborateur. Le playbook n'agit que si
+  le départ est confirmé en entrée, enrichit le compte pour connaître son état, puis déroule les actions
+  d'offboarding : désactivation et déconnexion, révocation des tokens et retrait des groupes, gestion de
+  la boîte mail. Les actions sont des tâches à exécuter dans l'AD ou l'IAM, remplaçables par les
+  commandes de l'annuaire en place. Chaque étape reste tracée dans le plan de travail de l'incident.
+starttaskid: "0"
+tasks:
+  "0":
+    id: "0"
+    taskid: 89b22704-6ee5-4522-a701-4e900b8f7da5
+    type: start
+    task:
+      id: 89b22704-6ee5-4522-a701-4e900b8f7da5
+      version: -1
+      name: ""
+      description: ""
+      iscommand: false
+      brand: ""
+    nexttasks:
+      '#none#':
+        - "1"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 450, "y": 50}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "1":
+    id: "1"
+    taskid: 6099dd36-cb64-4e5f-b79c-106b0c2dd9a5
+    type: title
+    task:
+      id: 6099dd36-cb64-4e5f-b79c-106b0c2dd9a5
+      version: -1
+      name: Offboarding collaborateur
+      description: ""
+      type: title
+      iscommand: false
+      brand: ""
+    nexttasks:
+      '#none#':
+        - "2"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 450, "y": 190}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "2":
+    id: "2"
+    taskid: 6d0c926c-4a0c-4737-a6db-11227895dc00
+    type: condition
+    task:
+      id: 6d0c926c-4a0c-4737-a6db-11227895dc00
+      version: -1
+      name: Départ confirmé ?
+      description: On n'agit que si le départ est confirmé, pas sur une simple absence.
+      type: condition
+      iscommand: false
+      brand: ""
+    nexttasks:
+      '#default#':
+        - "8"
+      "yes":
+        - "3"
+    conditions:
+      - label: "yes"
+        condition:
+          - - operator: isEqualString
+              left:
+                value:
+                  simple: inputs.DepartConfirme
+                iscontext: true
+              right:
+                value:
+                  simple: "true"
+              ignorecase: true
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 450, "y": 330}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "3":
+    id: "3"
+    taskid: 1fff75c0-8d61-4e40-805e-032442333e90
+    type: playbook
+    task:
+      id: 1fff75c0-8d61-4e40-805e-032442333e90
+      version: -1
+      name: Enrichir le compte
+      description: Réutilise le playbook d'enrichissement de compte pour connaître l'état du compte.
+      playbookName: Enrichissement de compte utilisateur
+      type: playbook
+      iscommand: false
+      brand: ""
+    scriptarguments:
+      NomUtilisateur:
+        simple: "${inputs.Collaborateur}"
+    nexttasks:
+      '#none#':
+        - "4"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 280, "y": 500}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "4":
+    id: "4"
+    taskid: 71362935-6b36-42ef-94af-b48f56d08bde
+    type: regular
+    task:
+      id: 71362935-6b36-42ef-94af-b48f56d08bde
+      version: -1
+      name: Désactiver le compte
+      description: |-
+        Tâche à exécuter : désactiver le compte et déconnecter les sessions actives, puis compléter la
+        tâche. Remplaçable par la commande de l'annuaire (ad-disable-account, msgraph-user-...).
+      type: regular
+      iscommand: false
+      brand: ""
+    nexttasks:
+      '#none#':
+        - "5"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 280, "y": 640}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "5":
+    id: "5"
+    taskid: 8ee15236-b410-4bab-bb6b-384ad6b25881
+    type: regular
+    task:
+      id: 8ee15236-b410-4bab-bb6b-384ad6b25881
+      version: -1
+      name: Révoquer les accès
+      description: |-
+        Tâche à exécuter : révoquer les tokens et refresh tokens, retirer le compte des groupes
+        sensibles, puis compléter la tâche.
+      type: regular
+      iscommand: false
+      brand: ""
+    nexttasks:
+      '#none#':
+        - "6"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 280, "y": 780}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "6":
+    id: "6"
+    taskid: 604ef4d8-3b91-4dd5-9155-51603522d7c9
+    type: regular
+    task:
+      id: 604ef4d8-3b91-4dd5-9155-51603522d7c9
+      version: -1
+      name: Gérer la boîte mail
+      description: |-
+        Tâche à exécuter : déléguer ou transférer temporairement la boîte mail au manager, puis
+        compléter la tâche.
+      type: regular
+      iscommand: false
+      brand: ""
+    nexttasks:
+      '#none#':
+        - "7"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 280, "y": 920}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "7":
+    id: "7"
+    taskid: 3ea9fd7e-9e02-4c20-bfec-c5af6a4f0766
+    type: regular
+    task:
+      id: 3ea9fd7e-9e02-4c20-bfec-c5af6a4f0766
+      version: -1
+      name: Accès coupés
+      description: Journalise la fin de l'offboarding.
+      scriptName: Set
+      type: regular
+      iscommand: false
+      brand: ""
+    scriptarguments:
+      key:
+        simple: Offboarding.Statut
+      value:
+        simple: Accès coupés
+    nexttasks:
+      '#none#':
+        - "9"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 280, "y": 1060}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "8":
+    id: "8"
+    taskid: e78649da-b297-4703-a74b-0a83823f9b08
+    type: regular
+    task:
+      id: e78649da-b297-4703-a74b-0a83823f9b08
+      version: -1
+      name: Départ non confirmé
+      description: Le départ n'est pas confirmé, aucune action n'est menée.
+      scriptName: Set
+      type: regular
+      iscommand: false
+      brand: ""
+    scriptarguments:
+      key:
+        simple: Offboarding.Statut
+      value:
+        simple: Départ non confirmé - aucune action
+    nexttasks:
+      '#none#':
+        - "9"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 660, "y": 500}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "9":
+    id: "9"
+    taskid: 240dd5de-6514-425f-8950-9eeaeed2336d
+    type: title
+    task:
+      id: 240dd5de-6514-425f-8950-9eeaeed2336d
+      version: -1
+      name: Fin
+      description: ""
+      type: title
+      iscommand: false
+      brand: ""
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 450, "y": 1230}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+view: |-
+  {
+    "linkLabelsPosition": {},
+    "paper": {
+      "dimensions": {
+        "height": 1245,
+        "width": 835,
+        "x": 280,
+        "y": 50
+      }
+    }
+  }
+inputs:
+  - key: Collaborateur
+    value: {}
+    required: false
+    description: Identifiant du collaborateur qui quitte l'entreprise.
+    playbookInputQuery: null
+  - key: Manager
+    value: {}
+    required: false
+    description: Manager qui récupère la délégation de la boîte mail.
+    playbookInputQuery: null
+  - key: DepartConfirme
+    value:
+      simple: "false"
+    required: false
+    description: Mettre "true" seulement quand le départ est confirmé (RH, contrat).
+    playbookInputQuery: null
+outputs:
+  - contextPath: Offboarding.Statut
+    description: Résultat - Accès coupés, ou Départ non confirmé - aucune action.
+    type: string
+  - contextPath: Compte.Statut
+    description: État du compte relevé par l'enrichissement.
+    type: string
+fromversion: 6.5.0
+tests:
+  - No tests (auto formatted)
