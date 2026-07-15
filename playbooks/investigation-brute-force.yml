@@ -1,0 +1,355 @@
+id: investigation-brute-force
+version: -1
+name: Investigation de connexions suspectes / brute force
+description: |-
+  Investigue une série d'échecs d'authentification. Il enrichit l'IP source et le compte visé en
+  réutilisant les playbooks d'enrichissement dédiés, puis tranche : un échec isolé est du bruit, un
+  volume de tentatives au-dessus du seuil est une brute force à surveiller, et si une connexion a fini
+  par réussir, la compromission devient probable. Le nombre de tentatives et le succès éventuel sont
+  fournis en entrée par l'alerte source.
+starttaskid: "0"
+tasks:
+  "0":
+    id: "0"
+    taskid: 2b288609-3f36-48d5-967f-2c044e204152
+    type: start
+    task:
+      id: 2b288609-3f36-48d5-967f-2c044e204152
+      version: -1
+      name: ""
+      description: ""
+      iscommand: false
+      brand: ""
+    nexttasks:
+      '#none#':
+        - "1"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 450, "y": 50}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "1":
+    id: "1"
+    taskid: c6f5e838-a0b4-4f93-ab62-23490e431245
+    type: title
+    task:
+      id: c6f5e838-a0b4-4f93-ab62-23490e431245
+      version: -1
+      name: Investigation brute force
+      description: ""
+      type: title
+      iscommand: false
+      brand: ""
+    nexttasks:
+      '#none#':
+        - "2"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 450, "y": 190}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "2":
+    id: "2"
+    taskid: 9f688719-71f3-4f79-a7d0-7e8ef7a75e64
+    type: playbook
+    task:
+      id: 9f688719-71f3-4f79-a7d0-7e8ef7a75e64
+      version: -1
+      name: Enrichir l'IP source
+      description: Réutilise le playbook d'enrichissement générique sur l'IP source.
+      playbookName: Enrichissement d'indicateurs (générique)
+      type: playbook
+      iscommand: false
+      brand: ""
+    scriptarguments:
+      IP:
+        simple: "${inputs.IPSource}"
+    nexttasks:
+      '#none#':
+        - "3"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 450, "y": 330}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "3":
+    id: "3"
+    taskid: f9e4867b-97cc-495b-bead-0514a052ac01
+    type: playbook
+    task:
+      id: f9e4867b-97cc-495b-bead-0514a052ac01
+      version: -1
+      name: Enrichir le compte
+      description: Réutilise le playbook d'enrichissement de compte sur le compte visé.
+      playbookName: Enrichissement de compte utilisateur
+      type: playbook
+      iscommand: false
+      brand: ""
+    scriptarguments:
+      NomUtilisateur:
+        simple: "${inputs.CompteCible}"
+    nexttasks:
+      '#none#':
+        - "4"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 450, "y": 470}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "4":
+    id: "4"
+    taskid: c36b5ba2-7fad-4a1f-bf5a-70d4f0d4b068
+    type: condition
+    task:
+      id: c36b5ba2-7fad-4a1f-bf5a-70d4f0d4b068
+      version: -1
+      name: Motif de brute force ?
+      description: Vrai si le nombre de tentatives atteint le seuil de brute force.
+      type: condition
+      iscommand: false
+      brand: ""
+    nexttasks:
+      '#default#':
+        - "8"
+      "yes":
+        - "5"
+    conditions:
+      - label: "yes"
+        condition:
+          - - operator: greaterThanOrEqual
+              left:
+                value:
+                  simple: inputs.NombreTentatives
+                iscontext: true
+              right:
+                value:
+                  simple: inputs.SeuilBruteForce
+                iscontext: true
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 450, "y": 620}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "5":
+    id: "5"
+    taskid: d5e73e6c-20b1-4191-b094-d507448b54db
+    type: condition
+    task:
+      id: d5e73e6c-20b1-4191-b094-d507448b54db
+      version: -1
+      name: Connexion réussie après les échecs ?
+      description: Vrai si une authentification a fini par aboutir, signe d'une compromission probable.
+      type: condition
+      iscommand: false
+      brand: ""
+    nexttasks:
+      '#default#':
+        - "7"
+      "yes":
+        - "6"
+    conditions:
+      - label: "yes"
+        condition:
+          - - operator: isEqualString
+              left:
+                value:
+                  simple: inputs.ConnexionReussie
+                iscontext: true
+              right:
+                value:
+                  simple: "true"
+              ignorecase: true
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 280, "y": 790}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "6":
+    id: "6"
+    taskid: 574df1bf-4fa7-4116-b852-202a7974322b
+    type: regular
+    task:
+      id: 574df1bf-4fa7-4116-b852-202a7974322b
+      version: -1
+      name: Compromission probable
+      description: Beaucoup d'échecs puis un succès, la compromission est probable.
+      scriptName: Set
+      type: regular
+      iscommand: false
+      brand: ""
+    scriptarguments:
+      key:
+        simple: BruteForce.Verdict
+      value:
+        simple: Compromission probable
+    nexttasks:
+      '#none#':
+        - "9"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 120, "y": 950}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "7":
+    id: "7"
+    taskid: 1c276b10-280a-40df-b75b-880806b02e80
+    type: regular
+    task:
+      id: 1c276b10-280a-40df-b75b-880806b02e80
+      version: -1
+      name: Brute force à surveiller
+      description: Volume de tentatives élevé sans succès constaté.
+      scriptName: Set
+      type: regular
+      iscommand: false
+      brand: ""
+    scriptarguments:
+      key:
+        simple: BruteForce.Verdict
+      value:
+        simple: Brute force à surveiller
+    nexttasks:
+      '#none#':
+        - "9"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 420, "y": 950}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "8":
+    id: "8"
+    taskid: 1de1c2f1-c61a-4f52-b0e0-8893d505c1c9
+    type: regular
+    task:
+      id: 1de1c2f1-c61a-4f52-b0e0-8893d505c1c9
+      version: -1
+      name: Bruit
+      description: Peu de tentatives, échec isolé sans motif de brute force.
+      scriptName: Set
+      type: regular
+      iscommand: false
+      brand: ""
+    scriptarguments:
+      key:
+        simple: BruteForce.Verdict
+      value:
+        simple: Bruit - échec isolé
+    nexttasks:
+      '#none#':
+        - "9"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 680, "y": 790}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "9":
+    id: "9"
+    taskid: 591ca5fa-0073-451f-ae48-3629559d0a2d
+    type: title
+    task:
+      id: 591ca5fa-0073-451f-ae48-3629559d0a2d
+      version: -1
+      name: Fin
+      description: ""
+      type: title
+      iscommand: false
+      brand: ""
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 450, "y": 1120}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+view: |-
+  {
+    "linkLabelsPosition": {},
+    "paper": {
+      "dimensions": {
+        "height": 1135,
+        "width": 815,
+        "x": 120,
+        "y": 50
+      }
+    }
+  }
+inputs:
+  - key: CompteCible
+    value: {}
+    required: false
+    description: Compte visé par les tentatives de connexion.
+    playbookInputQuery: null
+  - key: IPSource
+    value: {}
+    required: false
+    description: Adresse IP source des tentatives.
+    playbookInputQuery: null
+  - key: NombreTentatives
+    value:
+      simple: "0"
+    required: false
+    description: Nombre d'échecs d'authentification observés, fourni par l'alerte.
+    playbookInputQuery: null
+  - key: SeuilBruteForce
+    value:
+      simple: "10"
+    required: false
+    description: Seuil de tentatives à partir duquel on parle de brute force.
+    playbookInputQuery: null
+  - key: ConnexionReussie
+    value:
+      simple: "false"
+    required: false
+    description: Mettre "true" si une connexion a réussi après les échecs.
+    playbookInputQuery: null
+outputs:
+  - contextPath: BruteForce.Verdict
+    description: Verdict - Bruit, Brute force à surveiller, ou Compromission probable.
+    type: string
+  - contextPath: Enrichissement.Verdict
+    description: Verdict de réputation de l'IP source.
+    type: string
+  - contextPath: Compte.Statut
+    description: Résultat de l'enrichissement du compte.
+    type: string
+fromversion: 6.5.0
+tests:
+  - No tests (auto formatted)
