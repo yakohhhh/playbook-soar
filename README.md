@@ -26,6 +26,7 @@ sur une instance vierge sans installer d'intégration.
 | Consentement OAuth suspect (M365 / Google Workspace) | [playbooks/oauth-suspect.yml](playbooks/oauth-suspect.yml) | [docs/oauth-suspect.md](docs/oauth-suspect.md) |
 | Routage multi-client d'un incident (SOC managé) | [playbooks/routage-multi-client.yml](playbooks/routage-multi-client.yml) | [docs/routage-multi-client.md](docs/routage-multi-client.md) |
 | Triage d'exfiltration de données | [playbooks/triage-exfiltration.yml](playbooks/triage-exfiltration.yml) | [docs/triage-exfiltration.md](docs/triage-exfiltration.md) |
+| Réponse à une attaque MFA fatigue (push bombing) | [playbooks/mfa-fatigue.yml](playbooks/mfa-fatigue.yml) | [docs/mfa-fatigue.md](docs/mfa-fatigue.md) |
 
 ## Organisation
 
