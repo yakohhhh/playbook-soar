@@ -1,0 +1,438 @@
+id: triage-phishing
+version: -1
+name: Triage d'email de phishing
+description: |-
+  Prend un email signalé, récupère ses artefacts (expéditeur, URLs, hash de pièces jointes) et les
+  enrichit en réutilisant le playbook "Enrichissement d'indicateurs (générique)". Selon le verdict
+  d'enrichissement, il pose un verdict de triage et une sévérité. Le playbook gère un email sans URL et
+  sans pièce jointe : dans ce cas l'enrichissement ne trouve rien et le triage conclut à un email
+  bénin.
+starttaskid: "0"
+tasks:
+  "0":
+    id: "0"
+    taskid: e2436a13-2594-4722-962d-265e196437e7
+    type: start
+    task:
+      id: e2436a13-2594-4722-962d-265e196437e7
+      version: -1
+      name: ""
+      description: ""
+      iscommand: false
+      brand: ""
+    nexttasks:
+      '#none#':
+        - "1"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 450, "y": 50}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "1":
+    id: "1"
+    taskid: f76103f5-d0a1-497e-80f2-6e1c38451a9e
+    type: title
+    task:
+      id: f76103f5-d0a1-497e-80f2-6e1c38451a9e
+      version: -1
+      name: Triage phishing
+      description: ""
+      type: title
+      iscommand: false
+      brand: ""
+    nexttasks:
+      '#none#':
+        - "2"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 450, "y": 190}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "2":
+    id: "2"
+    taskid: fbe79a33-d8e5-43e9-a0ea-38f46c5474ab
+    type: regular
+    task:
+      id: fbe79a33-d8e5-43e9-a0ea-38f46c5474ab
+      version: -1
+      name: Retenir l'expéditeur
+      description: Enregistre l'adresse de l'expéditeur pour le contexte du triage.
+      scriptName: Set
+      type: regular
+      iscommand: false
+      brand: ""
+    scriptarguments:
+      key:
+        simple: Phishing.Expediteur
+      value:
+        simple: "${inputs.ExpediteurEmail}"
+    nexttasks:
+      '#none#':
+        - "3"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 450, "y": 330}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "3":
+    id: "3"
+    taskid: 3db2d07e-8b77-4509-a78c-1ab199098fb3
+    type: playbook
+    task:
+      id: 3db2d07e-8b77-4509-a78c-1ab199098fb3
+      version: -1
+      name: Enrichir les artefacts
+      description: Réutilise le playbook d'enrichissement générique sur les URLs et les hash extraits.
+      playbookName: Enrichissement d'indicateurs (générique)
+      type: playbook
+      iscommand: false
+      brand: ""
+    scriptarguments:
+      URL:
+        simple: "${inputs.URLs}"
+      FileHash:
+        simple: "${inputs.HashesFichiers}"
+    nexttasks:
+      '#none#':
+        - "4"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 450, "y": 470}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "4":
+    id: "4"
+    taskid: 5cd8ce62-500d-4cb6-9e16-ea16445070f4
+    type: condition
+    task:
+      id: 5cd8ce62-500d-4cb6-9e16-ea16445070f4
+      version: -1
+      name: Verdict malveillant ?
+      description: Un indicateur de l'email a été jugé malveillant par l'enrichissement.
+      type: condition
+      iscommand: false
+      brand: ""
+    nexttasks:
+      '#default#':
+        - "7"
+      "yes":
+        - "5"
+    conditions:
+      - label: "yes"
+        condition:
+          - - operator: isEqualString
+              left:
+                value:
+                  simple: Enrichissement.Verdict
+                iscontext: true
+              right:
+                value:
+                  simple: Malveillant
+              ignorecase: true
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 450, "y": 620}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "5":
+    id: "5"
+    taskid: b567f2bd-f25e-4251-aee5-878bb4461664
+    type: regular
+    task:
+      id: b567f2bd-f25e-4251-aee5-878bb4461664
+      version: -1
+      name: Verdict - malveillant
+      description: Marque le triage comme malveillant.
+      scriptName: Set
+      type: regular
+      iscommand: false
+      brand: ""
+    scriptarguments:
+      key:
+        simple: Phishing.Verdict
+      value:
+        simple: Malveillant
+    nexttasks:
+      '#none#':
+        - "6"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 250, "y": 790}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "6":
+    id: "6"
+    taskid: adf8b32b-6492-4684-ad7a-d14816f84a9f
+    type: regular
+    task:
+      id: adf8b32b-6492-4684-ad7a-d14816f84a9f
+      version: -1
+      name: Sévérité - élevée
+      description: Sévérité élevée pour un email malveillant.
+      scriptName: Set
+      type: regular
+      iscommand: false
+      brand: ""
+    scriptarguments:
+      key:
+        simple: Phishing.Severite
+      value:
+        simple: Élevée
+    nexttasks:
+      '#none#':
+        - "12"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 250, "y": 930}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "7":
+    id: "7"
+    taskid: c7dcd500-b61b-4382-ad8d-ced430ec3675
+    type: condition
+    task:
+      id: c7dcd500-b61b-4382-ad8d-ced430ec3675
+      version: -1
+      name: Verdict suspect ?
+      description: Un indicateur de l'email a été jugé suspect par l'enrichissement.
+      type: condition
+      iscommand: false
+      brand: ""
+    nexttasks:
+      '#default#':
+        - "10"
+      "yes":
+        - "8"
+    conditions:
+      - label: "yes"
+        condition:
+          - - operator: isEqualString
+              left:
+                value:
+                  simple: Enrichissement.Verdict
+                iscontext: true
+              right:
+                value:
+                  simple: Suspect
+              ignorecase: true
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 640, "y": 620}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "8":
+    id: "8"
+    taskid: 2f8e2e50-cacc-45df-a287-6c05e102f953
+    type: regular
+    task:
+      id: 2f8e2e50-cacc-45df-a287-6c05e102f953
+      version: -1
+      name: Verdict - suspect
+      description: Marque le triage comme suspect.
+      scriptName: Set
+      type: regular
+      iscommand: false
+      brand: ""
+    scriptarguments:
+      key:
+        simple: Phishing.Verdict
+      value:
+        simple: Suspect
+    nexttasks:
+      '#none#':
+        - "9"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 640, "y": 790}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "9":
+    id: "9"
+    taskid: 888c70e6-f5d0-4fa3-a92c-ce6029838e01
+    type: regular
+    task:
+      id: 888c70e6-f5d0-4fa3-a92c-ce6029838e01
+      version: -1
+      name: Sévérité - moyenne
+      description: Sévérité moyenne pour un email suspect.
+      scriptName: Set
+      type: regular
+      iscommand: false
+      brand: ""
+    scriptarguments:
+      key:
+        simple: Phishing.Severite
+      value:
+        simple: Moyenne
+    nexttasks:
+      '#none#':
+        - "12"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 640, "y": 930}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "10":
+    id: "10"
+    taskid: 5d6e5369-a035-416a-a45d-4cc2e3159a0e
+    type: regular
+    task:
+      id: 5d6e5369-a035-416a-a45d-4cc2e3159a0e
+      version: -1
+      name: Verdict - bénin
+      description: Aucun indicateur malveillant ou suspect, email considéré comme bénin.
+      scriptName: Set
+      type: regular
+      iscommand: false
+      brand: ""
+    scriptarguments:
+      key:
+        simple: Phishing.Verdict
+      value:
+        simple: Bénin
+    nexttasks:
+      '#none#':
+        - "11"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 850, "y": 790}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "11":
+    id: "11"
+    taskid: 712db128-8f11-4ff9-871a-1d37c3bb677c
+    type: regular
+    task:
+      id: 712db128-8f11-4ff9-871a-1d37c3bb677c
+      version: -1
+      name: Sévérité - faible
+      description: Sévérité faible pour un email bénin.
+      scriptName: Set
+      type: regular
+      iscommand: false
+      brand: ""
+    scriptarguments:
+      key:
+        simple: Phishing.Severite
+      value:
+        simple: Faible
+    nexttasks:
+      '#none#':
+        - "12"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 850, "y": 930}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "12":
+    id: "12"
+    taskid: c5a1684f-6a3d-454b-a718-2e6b84ed5ef3
+    type: title
+    task:
+      id: c5a1684f-6a3d-454b-a718-2e6b84ed5ef3
+      version: -1
+      name: Fin du triage
+      description: ""
+      type: title
+      iscommand: false
+      brand: ""
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 450, "y": 1090}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+view: |-
+  {
+    "linkLabelsPosition": {},
+    "paper": {
+      "dimensions": {
+        "height": 1105,
+        "width": 1075,
+        "x": 250,
+        "y": 50
+      }
+    }
+  }
+inputs:
+  - key: URLs
+    value:
+      simple: "${incident.emailurlclicked}"
+    required: false
+    description: URLs présentes dans l'email signalé. Par défaut, les URLs cliquées de l'incident.
+    playbookInputQuery: null
+  - key: HashesFichiers
+    value: {}
+    required: false
+    description: Hash des pièces jointes à enrichir, s'il y en a.
+    playbookInputQuery: null
+  - key: ExpediteurEmail
+    value:
+      simple: "${incident.emailfrom}"
+    required: false
+    description: Adresse de l'expéditeur de l'email. Par défaut, l'expéditeur de l'incident.
+    playbookInputQuery: null
+outputs:
+  - contextPath: Phishing.Verdict
+    description: Verdict de triage - Malveillant, Suspect ou Bénin.
+    type: string
+  - contextPath: Phishing.Severite
+    description: Sévérité calculée - Élevée, Moyenne ou Faible.
+    type: string
+  - contextPath: Phishing.Expediteur
+    description: Adresse de l'expéditeur de l'email signalé.
+    type: string
+fromversion: 6.5.0
+tests:
+  - No tests (auto formatted)
