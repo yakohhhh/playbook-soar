@@ -1,0 +1,397 @@
+id: triage-exfiltration
+version: -1
+name: Triage d'exfiltration de données
+description: |-
+  Qualifie une alerte d'exfiltration. Il écarte d'abord les destinations internes, qui sont
+  généralement des partages métier légitimes, puis enrichit l'utilisateur (compte à privilèges,
+  contexte) en réutilisant le playbook d'enrichissement de compte. Selon le volume comparé à un seuil,
+  il conclut à une exfiltration probable ou à un cas à confirmer, et propose une réponse. Volume, seuil
+  et domaine interne sont fournis en entrée.
+starttaskid: "0"
+tasks:
+  "0":
+    id: "0"
+    taskid: 0e62f03f-4e41-41c6-910f-c46729ef4104
+    type: start
+    task:
+      id: 0e62f03f-4e41-41c6-910f-c46729ef4104
+      version: -1
+      name: ""
+      description: ""
+      iscommand: false
+      brand: ""
+    nexttasks:
+      '#none#':
+        - "1"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 450, "y": 50}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "1":
+    id: "1"
+    taskid: 017cbf7a-6009-47d7-b3ba-5b121727ef30
+    type: title
+    task:
+      id: 017cbf7a-6009-47d7-b3ba-5b121727ef30
+      version: -1
+      name: Triage exfiltration
+      description: ""
+      type: title
+      iscommand: false
+      brand: ""
+    nexttasks:
+      '#none#':
+        - "2"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 450, "y": 190}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "2":
+    id: "2"
+    taskid: 71d89bb4-b04a-4628-90a8-74ae3b762a2a
+    type: condition
+    task:
+      id: 71d89bb4-b04a-4628-90a8-74ae3b762a2a
+      version: -1
+      name: Destination interne ?
+      description: Une destination interne est traitée comme un partage métier légitime.
+      type: condition
+      iscommand: false
+      brand: ""
+    nexttasks:
+      '#default#':
+        - "4"
+      "yes":
+        - "3"
+    conditions:
+      - label: "yes"
+        condition:
+          - - operator: isNotEmpty
+              left:
+                value:
+                  simple: inputs.DomaineInterne
+                iscontext: true
+          - - operator: containsString
+              left:
+                value:
+                  simple: inputs.Destination
+                iscontext: true
+              right:
+                value:
+                  simple: inputs.DomaineInterne
+                iscontext: true
+              ignorecase: true
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 450, "y": 330}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "3":
+    id: "3"
+    taskid: f9799fca-1a8a-4e68-be68-843a1de23ad9
+    type: regular
+    task:
+      id: f9799fca-1a8a-4e68-be68-843a1de23ad9
+      version: -1
+      name: Faux positif
+      description: Destination interne, partage considéré comme légitime.
+      scriptName: Set
+      type: regular
+      iscommand: false
+      brand: ""
+    scriptarguments:
+      key:
+        simple: Exfiltration.Verdict
+      value:
+        simple: Faux positif - destination interne
+    nexttasks:
+      '#none#':
+        - "10"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 230, "y": 480}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "4":
+    id: "4"
+    taskid: 3e4aa2fc-354b-48c0-ba15-79bd5a699c95
+    type: playbook
+    task:
+      id: 3e4aa2fc-354b-48c0-ba15-79bd5a699c95
+      version: -1
+      name: Enrichir l'utilisateur
+      description: Réutilise le playbook d'enrichissement de compte pour situer l'utilisateur.
+      playbookName: Enrichissement de compte utilisateur
+      type: playbook
+      iscommand: false
+      brand: ""
+    scriptarguments:
+      NomUtilisateur:
+        simple: "${inputs.Utilisateur}"
+    nexttasks:
+      '#none#':
+        - "5"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 660, "y": 480}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "5":
+    id: "5"
+    taskid: 9b293d14-7f32-4d51-af89-4fd885d6f00e
+    type: condition
+    task:
+      id: 9b293d14-7f32-4d51-af89-4fd885d6f00e
+      version: -1
+      name: Volume au-dessus du seuil ?
+      description: Un volume élevé vers une destination externe oriente vers l'exfiltration.
+      type: condition
+      iscommand: false
+      brand: ""
+    nexttasks:
+      '#default#':
+        - "7"
+      "yes":
+        - "6"
+    conditions:
+      - label: "yes"
+        condition:
+          - - operator: greaterThanOrEqual
+              left:
+                value:
+                  simple: inputs.Volume
+                iscontext: true
+              right:
+                value:
+                  simple: inputs.SeuilVolume
+                iscontext: true
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 660, "y": 620}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "6":
+    id: "6"
+    taskid: 3138578b-02cb-4c24-a5a5-f01cabd94b78
+    type: regular
+    task:
+      id: 3138578b-02cb-4c24-a5a5-f01cabd94b78
+      version: -1
+      name: Exfiltration probable
+      description: Volume élevé vers une destination externe.
+      scriptName: Set
+      type: regular
+      iscommand: false
+      brand: ""
+    scriptarguments:
+      key:
+        simple: Exfiltration.Verdict
+      value:
+        simple: Exfiltration probable
+    nexttasks:
+      '#none#':
+        - "8"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 520, "y": 780}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "7":
+    id: "7"
+    taskid: 1c6fb6ff-0c9f-4daf-8d10-9fa241df9452
+    type: regular
+    task:
+      id: 1c6fb6ff-0c9f-4daf-8d10-9fa241df9452
+      version: -1
+      name: À confirmer
+      description: Volume sous le seuil, cas à confirmer avec l'utilisateur.
+      scriptName: Set
+      type: regular
+      iscommand: false
+      brand: ""
+    scriptarguments:
+      key:
+        simple: Exfiltration.Verdict
+      value:
+        simple: À confirmer
+    nexttasks:
+      '#none#':
+        - "9"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 820, "y": 780}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "8":
+    id: "8"
+    taskid: c1c5dfb0-1349-4456-835f-85a6c8096a52
+    type: regular
+    task:
+      id: c1c5dfb0-1349-4456-835f-85a6c8096a52
+      version: -1
+      name: Réponse - contenir
+      description: Réponse recommandée pour une exfiltration probable.
+      scriptName: Set
+      type: regular
+      iscommand: false
+      brand: ""
+    scriptarguments:
+      key:
+        simple: Exfiltration.Reponse
+      value:
+        simple: Geler le compte et ouvrir une investigation
+    nexttasks:
+      '#none#':
+        - "10"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 520, "y": 930}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "9":
+    id: "9"
+    taskid: c065c198-6eef-494e-afe1-16ba91472a1e
+    type: regular
+    task:
+      id: c065c198-6eef-494e-afe1-16ba91472a1e
+      version: -1
+      name: Réponse - vérifier
+      description: Réponse recommandée pour un cas à confirmer.
+      scriptName: Set
+      type: regular
+      iscommand: false
+      brand: ""
+    scriptarguments:
+      key:
+        simple: Exfiltration.Reponse
+      value:
+        simple: Vérifier avec l'utilisateur
+    nexttasks:
+      '#none#':
+        - "10"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 820, "y": 930}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+  "10":
+    id: "10"
+    taskid: 47db74cd-3921-4d9a-ac1e-a05a1906bfb4
+    type: title
+    task:
+      id: 47db74cd-3921-4d9a-ac1e-a05a1906bfb4
+      version: -1
+      name: Fin
+      description: ""
+      type: title
+      iscommand: false
+      brand: ""
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {"position": {"x": 550, "y": 1080}}
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+view: |-
+  {
+    "linkLabelsPosition": {},
+    "paper": {
+      "dimensions": {
+        "height": 1095,
+        "width": 815,
+        "x": 230,
+        "y": 50
+      }
+    }
+  }
+inputs:
+  - key: Utilisateur
+    value: {}
+    required: false
+    description: Utilisateur à l'origine du transfert.
+    playbookInputQuery: null
+  - key: Ressource
+    value: {}
+    required: false
+    description: Ressource ou fichier concerné.
+    playbookInputQuery: null
+  - key: Destination
+    value: {}
+    required: false
+    description: Destination du transfert (domaine, adresse, partage).
+    playbookInputQuery: null
+  - key: Volume
+    value:
+      simple: "0"
+    required: false
+    description: Volume transféré, dans l'unité de l'alerte.
+    playbookInputQuery: null
+  - key: SeuilVolume
+    value:
+      simple: "100"
+    required: false
+    description: Seuil de volume à partir duquel l'exfiltration devient probable.
+    playbookInputQuery: null
+  - key: DomaineInterne
+    value: {}
+    required: false
+    description: Domaine interne de l'entreprise, pour écarter les destinations internes.
+    playbookInputQuery: null
+outputs:
+  - contextPath: Exfiltration.Verdict
+    description: Verdict - Faux positif, À confirmer, ou Exfiltration probable.
+    type: string
+  - contextPath: Exfiltration.Reponse
+    description: Réponse recommandée.
+    type: string
+  - contextPath: Compte.APrivileges
+    description: Indique si l'utilisateur est à privilèges, d'après l'enrichissement.
+    type: string
+fromversion: 6.5.0
+tests:
+  - No tests (auto formatted)

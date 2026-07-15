@@ -25,6 +25,7 @@ sur une instance vierge sans installer d'intégration.
 | Détection de connexion impossible (voyage impossible) | [playbooks/voyage-impossible.yml](playbooks/voyage-impossible.yml) | [docs/voyage-impossible.md](docs/voyage-impossible.md) |
 | Consentement OAuth suspect (M365 / Google Workspace) | [playbooks/oauth-suspect.yml](playbooks/oauth-suspect.yml) | [docs/oauth-suspect.md](docs/oauth-suspect.md) |
 | Routage multi-client d'un incident (SOC managé) | [playbooks/routage-multi-client.yml](playbooks/routage-multi-client.yml) | [docs/routage-multi-client.md](docs/routage-multi-client.md) |
+| Triage d'exfiltration de données | [playbooks/triage-exfiltration.yml](playbooks/triage-exfiltration.yml) | [docs/triage-exfiltration.md](docs/triage-exfiltration.md) |
 
 ## Organisation
 
